@@ -102,7 +102,7 @@ def main(args):
                 print "Y Rotation: " , ("%.2f" % y_rot_temp)
                 print "temp"
                 print "---------------------"
-                print "temp: " ("%.2f" % temp)
+                print "temp: " + temp
 
                 tmp = sp.call('clear', shell=True)  # clears the screen
 
