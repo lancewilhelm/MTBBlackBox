@@ -51,7 +51,7 @@ def main(args):
     # Variables
     rot_matrix = []
     t = 0       # start time
-    dt = 0.2    # time step, directly controls the time.sleep call
+    dt = 0.05    # time step, directly controls the time.sleep call
     outputCSVFilename = "data/rot_out_" + datetime.datetime.now().strftime("%c") + ".csv"
 
     if(args.d == "n"):
