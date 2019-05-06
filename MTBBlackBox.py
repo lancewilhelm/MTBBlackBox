@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import smbus
 import math
 import time
 import datetime
@@ -7,6 +6,12 @@ import subprocess as sp
 import csv
 import sys
 import argparse
+
+# Put this in a try catch for running on the PC. No need for smbus on here.
+try:
+    import smbus
+except:
+    pass
 
 # Define functions for reading sensor data
 def read_byte(reg, address, bus):
@@ -49,30 +54,41 @@ def main(args):
     dt = 0.2    # time step, directly controls the time.sleep call
     outputCSVFilename = "data/rot_out_" + datetime.datetime.now().strftime("%c") + ".csv"
 
-    # Register
-    power_mgmt_1 = 0x6b
-
-    # Housekeeping for the mpu6050 sensor. I2C things
-    bus = smbus.SMBus(1) # bus = smbus.SMBus(0) fuer Revision 1
-    address = 0x68       # via i2cdetect
+    if(args.d == "n"):
+        # Housekeeping for the mpu6050 sensor. I2C things
+        bus = smbus.SMBus(1) # bus = smbus.SMBus(0) fuer Revision 1
+        address = 0x68       # via i2cdetect
+        power_mgmt_1 = 0x6b  # register
 
     # Creat a new CSV for this run
     with open(outputCSVFilename, 'w') as f:
         f.close()
 
+    print "Running..."
+
     try:
         while True:
-            print "Running..."
+
             # Activate to be able to address the module
-            bus.write_byte_data(address, power_mgmt_1, 0)
+            # Put in an if statement for computer debugging
+            if(args.d == "n"):
+                bus.write_byte_data(address, power_mgmt_1, 0)
 
-            gryo_xout = read_word_2c(0x43, address, bus)
-            gryo_yout = read_word_2c(0x45, address, bus)
-            gryo_zout = read_word_2c(0x47, address, bus)
+                gryo_xout = read_word_2c(0x43, address, bus)
+                gryo_yout = read_word_2c(0x45, address, bus)
+                gryo_zout = read_word_2c(0x47, address, bus)
 
-            acc_xout = read_word_2c(0x3b, address, bus)
-            acc_yout = read_word_2c(0x3d, address, bus)
-            acc_zout = read_word_2c(0x3f, address, bus)
+                acc_xout = read_word_2c(0x3b, address, bus)
+                acc_yout = read_word_2c(0x3d, address, bus)
+                acc_zout = read_word_2c(0x3f, address, bus)
+            else:
+                gryo_xout = 0
+                gryo_yout = 0
+                gryo_zout = 0
+
+                acc_xout = 0
+                acc_yout = 0
+                acc_zout = 0
 
             acc_xout_scaled = acc_xout / 16384.0
             acc_yout_scaled = acc_yout / 16384.0
