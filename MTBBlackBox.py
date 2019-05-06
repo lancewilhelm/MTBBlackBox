@@ -66,6 +66,8 @@ def main(args):
             # Activate to be able to address the module
             bus.write_byte_data(address, power_mgmt_1, 0)
 
+            temp = read_word_2c(0x41, address, bus)
+
             gryo_xout = read_word_2c(0x43, address, bus)
             gryo_yout = read_word_2c(0x45, address, bus)
             gryo_zout = read_word_2c(0x47, address, bus)
@@ -94,8 +96,13 @@ def main(args):
                 print "acc_xout: ", ("%6d" % acc_xout), " scaled: ", acc_xout_scaled
                 print "acc_yout: ", ("%6d" % acc_yout), " scaled: ", acc_yout_scaled
                 print "acc_zout: ", ("%6d" % acc_zout), " scaled: ", acc_zout_scaled
+                print "rot"
+                print "---------------------"
                 print "X Rotation: " , ("%.2f" % x_rot_temp)
                 print "Y Rotation: " , ("%.2f" % y_rot_temp)
+                print "temp"
+                print "---------------------"
+                print "temp: " ("%.2f" % temp)
 
                 tmp = sp.call('clear', shell=True)  # clears the screen
 
