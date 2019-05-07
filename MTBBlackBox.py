@@ -50,7 +50,6 @@ def main(args):
     args = args
 
     # Variables
-    rot_matrix = []
     t = 0       # start time
     dt = 0.05    # time step, directly controls the time.sleep call
     outputCSVFilename = "data/rot_out_" + datetime.datetime.now().strftime("%c") + ".csv"
@@ -73,6 +72,7 @@ def main(args):
             # Activate to be able to address the module
             # Put in an if statement for computer debugging
             if(args.d == "n"):
+
                 bus.write_byte_data(address, power_mgmt_1, 0)
 
                 gryo_xout = read_word_2c(0x43, address, bus)
@@ -82,10 +82,12 @@ def main(args):
                 acc_xout = read_word_2c(0x3b, address, bus)
                 acc_yout = read_word_2c(0x3d, address, bus)
                 acc_zout = read_word_2c(0x3f, address, bus)
+
             else:
-                gryo_xout = 0
-                gryo_yout = 0
-                gryo_zout = 0
+
+                gyro_xout = 0
+                gyro_yout = 0
+                gyro_zout = 0
 
                 acc_xout = 0
                 acc_yout = 0
@@ -97,10 +99,14 @@ def main(args):
 
             x_rot_temp = get_x_rotation(acc_xout_scaled, acc_yout_scaled, acc_zout_scaled)
             y_rot_temp = get_y_rotation(acc_xout_scaled, acc_yout_scaled, acc_zout_scaled)
-            row_temp = [("%.1f" % t), ("%.2f" % x_rot_temp), ("%.2f" % y_rot_temp)]
+            rot_row_temp = [("%.2f" % x_rot_temp), ("%.2f" % y_rot_temp)]
+            gyro_row_temp = [("%.4f" % gyro_xout), ("%.4f" % gyro_yout), ("%.4f" % gyro_zout)]
+            acc_row_temp = [("%.4f" % acc_xout), ("%.4f" % acc_yout), ("%.4f" % acc_zout)]
+            full_row_temp = [("%.1f" % t), ("%.4f" % gyro_xout), ("%.4f" % gyro_yout), ("%.4f" % gyro_zout), ("%.4f" % acc_xout), ("%.4f" % acc_yout), ("%.4f" % acc_zout), ("%.2f" % x_rot_temp), ("%.2f" % y_rot_temp)]
 
+            # Print out all of the data on screen if the user specifies in the arguments
             if(args.o == "y"):
-                # Print out all of the data on screen if the user wants to
+
                 print "gryo"
                 print "--------"
                 print "gryo_xout: ", ("%5d" % gryo_xout), " scaled: ", (gryo_xout / 131)
@@ -120,8 +126,8 @@ def main(args):
 
             # Open the CSV file and write the data
             with open(outputCSVFilename, 'a') as f:
-                        writer = csv.writer(f)
-                        writer.writerow(row_temp)
+                writer = csv.writer(f)
+                writer.writerow(full_row_temp)
             f.close()
 
             # Pause and advance the time tracker

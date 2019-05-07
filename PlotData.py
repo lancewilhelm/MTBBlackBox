@@ -10,28 +10,56 @@ def main(fileLocation):
 
     # Data for plotting
     t = []
-    x = []
-    y = []
+    gyroX = []
+    gyroY = []
+    gyroZ = []
+    accX = []
+    accY = []
+    accZ = []
+    rotX = []
+    rotY = []
 
     try:
         with open(fileLocation,'r') as csvfile:
             plots = csv.reader(csvfile, delimiter=',')
             for row in plots:
                 t.append(float(row[0]))
-                x.append(float(row[1]))
-                y.append(float(row[2]))
+                gyroX.append(float(row[1]))
+                gyroY.append(float(row[2]))
+                gyroZ.append(float(row[3]))
+                accX.append(float(row[4]))
+                accY.append(float(row[5]))
+                accZ.append(float(row[6]))
+                rotX.append(float(row[7]))
+                rotY.append(float(row[8]))
     except:
         print "Error has occured"
 
-    plt.plot(t, x, label="x_rot")
-    plt.plot(t, y, label="y_rot")
-
-    plt.xlabel('t')
-    plt.ylabel('rot')
+    plt.subplot(3,1,1)
+    plt.plot(t, rotX, label="x")
+    plt.plot(t, rotY, label="y")
+    plt.ylabel('Rotation (Degrees)')
     plt.legend()
     plt.grid()
+
+    plt.subplot(3,1,2)
+    plt.plot(t, gyroX, label="x")
+    plt.plot(t, gyroY, label="y")
+    plt.plot(t, gyroZ, label="z")
+    plt.ylabel('Gyro (deg/s)')
+    plt.legend()
+    plt.grid()
+
+    plt.subplot(3,1,3)
+    plt.plot(t, accX, label="x")
+    plt.plot(t, accY, label="y")
+    plt.plot(t, accZ, label="z")
+    plt.ylabel('Acc (G)')
+    plt.xlabel('t')
+    plt.legend()
+    plt.grid()
+
     plt.savefig("data/plot.png")
-    plt.show()
 
     print "Plot Created"
 
