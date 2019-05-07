@@ -52,7 +52,7 @@ def main(args):
     # Variables
     t = 0       # start time
     dt = 0.05    # time step, directly controls the time.sleep call
-    outputCSVFilename = "data/rot_out_" + datetime.datetime.now().strftime("%c") + ".csv"
+    outputCSVFilename = "data/" + datetime.datetime.now().strftime("%c") + ".csv"
 
     if(args.d == "n"):
         # Housekeeping for the mpu6050 sensor. I2C things
