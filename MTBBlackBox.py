@@ -6,6 +6,7 @@ import subprocess as sp
 import csv
 import sys
 import argparse
+import PlotData
 
 # Put this in a try catch for running on the PC. No need for smbus on here.
 try:
@@ -129,7 +130,15 @@ def main(args):
 
     # If we interupt with the keyboard, print something to recognize it
     except KeyboardInterrupt:
-        print "Done"
+        if(args.p == "y"):
+            print "Creating Plot"
+
+            # Create the plot for the data
+            PlotData.main(outputCSVFilename)
+
+            print "Done."
+        else:
+            print "Done. No plot created."
 
 # Call the main funciton
 if __name__ == "__main__":

@@ -4,15 +4,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import csv
 import sys
+import argparse
 
-def main():
+def main(fileLocation):
+
     # Data for plotting
     t = []
     x = []
     y = []
-
-    # Import the Data
-    fileLocation = sys.argv[1]
 
     try:
         with open(fileLocation,'r') as csvfile:
@@ -36,6 +35,10 @@ def main():
 
     print "Plot Created"
 
-# Call the main funciton
+# Call the main funciton if ran from standalone
 if __name__ == "__main__":
-    main()
+
+    # Import the Data
+    fileLocation = sys.argv[1]
+
+    main(fileLocation)
