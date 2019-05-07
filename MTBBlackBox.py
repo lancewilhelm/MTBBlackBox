@@ -75,9 +75,9 @@ def main(args):
 
                 bus.write_byte_data(address, power_mgmt_1, 0)
 
-                gryo_xout = read_word_2c(0x43, address, bus)
-                gryo_yout = read_word_2c(0x45, address, bus)
-                gryo_zout = read_word_2c(0x47, address, bus)
+                gyro_xout = read_word_2c(0x43, address, bus)
+                gyro_yout = read_word_2c(0x45, address, bus)
+                gyro_zout = read_word_2c(0x47, address, bus)
 
                 acc_xout = read_word_2c(0x3b, address, bus)
                 acc_yout = read_word_2c(0x3d, address, bus)
@@ -107,11 +107,11 @@ def main(args):
             # Print out all of the data on screen if the user specifies in the arguments
             if(args.o == "y"):
 
-                print "gryo"
+                print "gyro"
                 print "--------"
-                print "gryo_xout: ", ("%5d" % gryo_xout), " scaled: ", (gryo_xout / 131)
-                print "gryo_yout: ", ("%5d" % gryo_yout), " scaled: ", (gryo_yout / 131)
-                print "gryo_zout: ", ("%5d" % gryo_zout), " scaled: ", (gryo_zout / 131)
+                print "gyro_xout: ", ("%5d" % gyro_xout), " scaled: ", (gyro_xout / 131)
+                print "gyro_yout: ", ("%5d" % gyro_yout), " scaled: ", (gyro_yout / 131)
+                print "gyro_zout: ", ("%5d" % gyro_zout), " scaled: ", (gyro_zout / 131)
                 print "acc"
                 print "---------------------"
                 print "acc_xout: ", ("%6d" % acc_xout), " scaled: ", acc_xout_scaled
