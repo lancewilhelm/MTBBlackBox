@@ -6,11 +6,7 @@ import subprocess as sp
 import csv
 import sys
 import argparse
-
-try:
-    from MPU6050 import MPU6050
-except:
-    pass
+from MPU6050 import MPU6050
 
 i2c_bus = 1
 device_address = 0x68
