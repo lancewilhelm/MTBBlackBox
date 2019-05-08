@@ -6,7 +6,6 @@ import subprocess as sp
 import csv
 import sys
 import argparse
-import PlotData
 
 # Put this in a try catch for running on the PC. No need for smbus on here.
 try:
@@ -67,7 +66,7 @@ def main(args):
         writer.writerow(first_row)
         f.close()
 
-    print "Running..."
+    print("Running...")
 
     try:
         while True:
@@ -110,20 +109,20 @@ def main(args):
             # Print out all of the data on screen if the user specifies in the arguments
             if(args.o == "y"):
 
-                print "gyro"
-                print "--------"
-                print "gyro_xout: ", ("%5d" % gyro_xout), " scaled: ", (gyro_xout / 131)
-                print "gyro_yout: ", ("%5d" % gyro_yout), " scaled: ", (gyro_yout / 131)
-                print "gyro_zout: ", ("%5d" % gyro_zout), " scaled: ", (gyro_zout / 131)
-                print "acc"
-                print "---------------------"
-                print "acc_xout: ", ("%6d" % acc_xout), " scaled: ", acc_xout_scaled
-                print "acc_yout: ", ("%6d" % acc_yout), " scaled: ", acc_yout_scaled
-                print "acc_zout: ", ("%6d" % acc_zout), " scaled: ", acc_zout_scaled
-                print "rot"
-                print "---------------------"
-                print "X Rotation: " , ("%.2f" % x_rot_temp)
-                print "Y Rotation: " , ("%.2f" % y_rot_temp)
+                print("gyro")
+                print("--------")
+                print("gyro_xout: ", ("%5d" % gyro_xout), " scaled: ", (gyro_xout / 131))
+                print("gyro_yout: ", ("%5d" % gyro_yout), " scaled: ", (gyro_yout / 131))
+                print("gyro_zout: ", ("%5d" % gyro_zout), " scaled: ", (gyro_zout / 131))
+                print("acc")
+                print("---------------------")
+                print("acc_xout: ", ("%6d" % acc_xout), " scaled: ", acc_xout_scaled)
+                print("acc_yout: ", ("%6d" % acc_yout), " scaled: ", acc_yout_scaled)
+                print("acc_zout: ", ("%6d" % acc_zout), " scaled: ", acc_zout_scaled)
+                print("rot")
+                print("---------------------")
+                print("X Rotation: " , ("%.2f" % x_rot_temp))
+                print("Y Rotation: " , ("%.2f" % y_rot_temp))
 
                 tmp = sp.call('clear', shell=True)  # clears the screen
 
@@ -139,15 +138,7 @@ def main(args):
 
     # If we interupt with the keyboard, print something to recognize it
     except KeyboardInterrupt:
-        if(args.p == "y"):
-            print "Creating Plot"
-
-            # Create the plot for the data
-            PlotData.main(outputCSVFilename)
-
-            print "Done."
-        else:
-            print "Done. No plot created."
+        print("Done")
 
 # Call the main funciton
 if __name__ == "__main__":
