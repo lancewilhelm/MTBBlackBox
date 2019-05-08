@@ -85,11 +85,11 @@ def main(args):
                 print('roll: ' + str(roll_pitch_yaw.x))
                 print('pitch: ' + str(roll_pitch_yaw.y))
                 print('yaw: ' + str(roll_pitch_yaw.z))
-                print('accX: ' + str(accel.x))
-                print('accY: ' + str(accel.y))
-                print('accZ: ' + str(accel.z))
+                print('accX: ' + str(grav.x))
+                print('accY: ' + str(grav.y))
+                print('accZ: ' + str(grav.z))
 
-                full_row_temp = [("%.4f" % t), ("%.4f" % roll_pitch_yaw.x), ("%.4f" % roll_pitch_yaw.y), ("%.4f" % roll_pitch_yaw.z), ("%.4f" % accel.x), ("%.4f" % accel.y), ("%.4f" % accel.z)]
+                full_row_temp = [("%.4f" % t), ("%.4f" % roll_pitch_yaw.x), ("%.4f" % roll_pitch_yaw.y), ("%.4f" % roll_pitch_yaw.z), ("%.4f" % grav.x), ("%.4f" % grav.y), ("%.4f" % grav.z)]
 
             # Open the CSV file and write the data
             with open(outputCSVFilename, 'a') as f:
