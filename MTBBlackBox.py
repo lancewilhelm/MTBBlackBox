@@ -58,6 +58,7 @@ def main(args):
         f.close()
 
     print("Running...")
+    startTime = time.time_ns()
 
     try:
         while True:
@@ -80,16 +81,18 @@ def main(args):
                 accel = mpu.DMP_get_acceleration_int16(FIFO_buffer)
                 quat = mpu.DMP_get_quaternion_int16(FIFO_buffer)
                 grav = mpu.DMP_get_gravity(quat)
+                linearAccel = mpu.DMP_get_linear_accel(accel, grav)
                 roll_pitch_yaw = mpu.DMP_get_euler_roll_pitch_yaw(quat, grav)
                 tmp = sp.call('clear', shell=True)  # clears the screen
                 print('roll: ' + str(roll_pitch_yaw.x))
                 print('pitch: ' + str(roll_pitch_yaw.y))
                 print('yaw: ' + str(roll_pitch_yaw.z))
-                print('accX: ' + str(grav.x))
-                print('accY: ' + str(grav.y))
-                print('accZ: ' + str(grav.z))
+                print('accX: ' + str(linearAccel.x))
+                print('accY: ' + str(linearAccel.y))
+                print('accZ: ' + str(linearAccel.z))
 
-                full_row_temp = [("%.4f" % t), ("%.4f" % roll_pitch_yaw.x), ("%.4f" % roll_pitch_yaw.y), ("%.4f" % roll_pitch_yaw.z), ("%.4f" % grav.x), ("%.4f" % grav.y), ("%.4f" % grav.z)]
+                t = float((time.time_ns() - startTime) * (10**9))
+                full_row_temp = [("%.4f" % t), ("%.4f" % roll_pitch_yaw.x), ("%.4f" % roll_pitch_yaw.y), ("%.4f" % roll_pitch_yaw.z), ("%.4f" % linearAccel.x), ("%.4f" % linearAccel.y), ("%.4f" % linearAccel.z)]
 
             # Open the CSV file and write the data
             with open(outputCSVFilename, 'a') as f:
@@ -98,8 +101,8 @@ def main(args):
             f.close()
 
             # Pause and advance the time tracker
-            time.sleep(dt)
-            t += dt
+            #time.sleep(dt)
+            #t += dt
 
     # If we interupt with the keyboard, print something to recognize it
     except KeyboardInterrupt:
