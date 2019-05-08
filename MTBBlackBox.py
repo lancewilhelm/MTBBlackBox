@@ -60,8 +60,11 @@ def main(args):
         address = 0x68       # via i2cdetect
         power_mgmt_1 = 0x6b  # register
 
-    # Creat a new CSV for this run
+    # Creat a new CSV for this run and write the header row
     with open(outputCSVFilename, 'w') as f:
+        first_row = ["t", "gyroX", "gyroY", "gyroZ", "accX", "accY", "accZ", "rotX", "rotY"]
+        writer = csv.writer(f)
+        writer.writerow(first_row)
         f.close()
 
     print "Running..."
