@@ -47,7 +47,7 @@ def main(args):
 
     # Variables
     t = 0       # start time
-    dt = 0.05    # time step, directly controls the time.sleep call
+    dt = 0.001    # time step, directly controls the time.sleep call
     outputCSVFilename = "data/" + datetime.datetime.now().strftime("%c") + ".csv"
 
     # Creat a new CSV for this run and write the header row
@@ -89,7 +89,7 @@ def main(args):
                 print('accY: ' + str(accel.y))
                 print('accZ: ' + str(accel.z))
 
-                full_row_temp = [("%.3f" % t), ("%.4f" % roll_pitch_yaw.x), ("%.4f" % roll_pitch_yaw.y), ("%.4f" % roll_pitch_yaw.z), ("%.4f" % accel.x), ("%.4f" % accel.y), ("%.4f" % accel.z)]
+                full_row_temp = [("%.4f" % t), ("%.4f" % roll_pitch_yaw.x), ("%.4f" % roll_pitch_yaw.y), ("%.4f" % roll_pitch_yaw.z), ("%.4f" % accel.x), ("%.4f" % accel.y), ("%.4f" % accel.z)]
 
             # Open the CSV file and write the data
             with open(outputCSVFilename, 'a') as f:
