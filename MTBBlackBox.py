@@ -104,7 +104,7 @@ def main(args):
             rot_row_temp = [("%.2f" % x_rot_temp), ("%.2f" % y_rot_temp)]
             gyro_row_temp = [("%.4f" % gyro_xout), ("%.4f" % gyro_yout), ("%.4f" % gyro_zout)]
             acc_row_temp = [("%.4f" % acc_xout), ("%.4f" % acc_yout), ("%.4f" % acc_zout)]
-            full_row_temp = [("%.1f" % t), ("%.4f" % gyro_xout), ("%.4f" % gyro_yout), ("%.4f" % gyro_zout), ("%.4f" % acc_xout), ("%.4f" % acc_yout), ("%.4f" % acc_zout), ("%.2f" % x_rot_temp), ("%.2f" % y_rot_temp)]
+            full_row_temp = [("%.3f" % t), ("%.4f" % gyro_xout), ("%.4f" % gyro_yout), ("%.4f" % gyro_zout), ("%.4f" % acc_xout), ("%.4f" % acc_yout), ("%.4f" % acc_zout), ("%.2f" % x_rot_temp), ("%.2f" % y_rot_temp)]
 
             # Print out all of the data on screen if the user specifies in the arguments
             if(args.o == "y"):
