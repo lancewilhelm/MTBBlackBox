@@ -185,7 +185,7 @@ void loop(std::ofstream &myfile, std::clock_t &clockstart) {
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
             printf("aworld %6d %6d %6d    ", aaWorld.x, aaWorld.y, aaWorld.z);
-            myfile << aaWorld.x << "," << aaWorld.y << "," << aaWorld.z << ",";
+            myfile << aaWorld.x << "," << aaWorld.y << "," << aaWorld.z;
         #endif
 
         #ifdef OUTPUT_TEAPOT
