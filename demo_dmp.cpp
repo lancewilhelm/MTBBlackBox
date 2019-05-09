@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
+#include <ctime>
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
 
@@ -119,9 +121,11 @@ void setup() {
 // ===                    MAIN PROGRAM LOOP                     ===
 // ================================================================
 
-void loop(std::ofstream &myfile) {
+void loop(std::ofstream &myfile, std::clock_t &clockstart) {
     // if programming failed, don't try to do anything
     if (!dmpReady) return;
+
+
     // get current FIFO count
     fifoCount = mpu.getFIFOCount();
 
@@ -135,6 +139,12 @@ void loop(std::ofstream &myfile) {
         // read a packet from FIFO
         mpu.getFIFOBytes(fifoBuffer, packetSize);
 
+        // Record the time
+        double duration;
+        duration = ( std::clock() - clockstart ) / (double) CLOCKS_PER_SEC;
+        myfile << std::setprecision(3) << duration << ",";
+
+        // Start going down and displaying data
         #ifdef OUTPUT_READABLE_QUATERNION
             // display quaternion values in easy matrix form: w x y z
             mpu.dmpGetQuaternion(&q, fifoBuffer);
@@ -154,7 +164,7 @@ void loop(std::ofstream &myfile) {
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
             printf("ypr  %7.2f %7.2f %7.2f    ", ypr[0] * 180/M_PI, ypr[1] * 180/M_PI, ypr[2] * 180/M_PI);
-            myfile << "%7.2f, %7.2f, %7.2f,", ypr[0] * 180/M_PI, ypr[1] * 180/M_PI, ypr[2] * 180/M_PI;
+            myfile << std::fixed << std::setprecision(2) << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << ",";
         #endif
 
         #ifdef OUTPUT_READABLE_REALACCEL
@@ -164,7 +174,7 @@ void loop(std::ofstream &myfile) {
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
             printf("areal %6d %6d %6d    ", aaReal.x, aaReal.y, aaReal.z);
-            myfile << "%6d, %6d, %6d,", aaReal.x, aaReal.y, aaReal.z;
+            myfile << aaReal.x << "," << aaReal.y << "," << aaReal.z << ",";
         #endif
 
         #ifdef OUTPUT_READABLE_WORLDACCEL
@@ -175,7 +185,7 @@ void loop(std::ofstream &myfile) {
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
             printf("aworld %6d %6d %6d    ", aaWorld.x, aaWorld.y, aaWorld.z);
-            myfile << "%6d, %6d, %6d,", aaWorld.x, aaWorld.y, aaWorld.z;
+            myfile << aaWorld.x << "," << aaWorld.y << "," << aaWorld.z << ",";
         #endif
 
         #ifdef OUTPUT_TEAPOT
@@ -200,12 +210,16 @@ int main() {
     setup();
     usleep(100000);
 
+    // Start the clock for time purposes
+    std::clock_t clockstart;
+
+    // Initialize file for recording, write the first row of it for a header
     std::ofstream myfile;
     myfile.open ("data/data.csv");
     myfile << "t, yaw, pitch, roll, arealX, arealY, arealZ, aworldX, aworldY, aworldZ\n";
 
     for (;;)
-        loop(myfile);
+        loop(myfile, clockstart);
 
     myfile.close();
     return 0;
