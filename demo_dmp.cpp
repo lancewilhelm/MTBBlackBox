@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
+#include <chrono>
 #include <ctime>
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
@@ -121,7 +122,7 @@ void setup() {
 // ===                    MAIN PROGRAM LOOP                     ===
 // ================================================================
 
-void loop(std::ofstream &myfile, std::clock_t &clockstart) {
+void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_resolution_clock::time_point &t1) {
     // if programming failed, don't try to do anything
     if (!dmpReady) return;
 
@@ -140,9 +141,9 @@ void loop(std::ofstream &myfile, std::clock_t &clockstart) {
         mpu.getFIFOBytes(fifoBuffer, packetSize);
 
         // Record the time
-        double duration;
-        duration = ( std::clock() - clockstart ) / (double) CLOCKS_PER_SEC;
-        myfile << std::setprecision(6) << duration << ",";
+        t1 = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = t1 - t0;
+        myfile << std::setprecision(6) << duration.count() << ",";
 
         // Start going down and displaying data
         #ifdef OUTPUT_READABLE_QUATERNION
@@ -211,8 +212,9 @@ int main() {
     usleep(100000);
 
     // Start the clock for time purposes
-    std::clock_t clockstart;
-    clockstart = std::clock();
+    std::chrono::time_point<std::chrono::high_resolution_clock> t0, t1;
+
+    t0 = std::chrono::high_resolution_clock::now();
 
     // Initialize file for recording, write the first row of it for a header
     std::ofstream myfile;
@@ -220,7 +222,7 @@ int main() {
     myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ\n";
 
     for (;;)
-        loop(myfile, clockstart);
+        loop(myfile, t0, t1);
 
     myfile.close();
     return 0;
