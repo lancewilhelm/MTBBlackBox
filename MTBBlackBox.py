@@ -83,13 +83,13 @@ def main(args):
                 grav = mpu.DMP_get_gravity(quat)
                 linearAccel = mpu.DMP_get_linear_accel(accel, grav)
                 roll_pitch_yaw = mpu.DMP_get_euler_roll_pitch_yaw(quat, grav)
-                tmp = sp.call('clear', shell=True)  # clears the screen
-                print('roll: ' + str(roll_pitch_yaw.x))
-                print('pitch: ' + str(roll_pitch_yaw.y))
-                print('yaw: ' + str(roll_pitch_yaw.z))
-                print('accX: ' + str(linearAccel.x))
-                print('accY: ' + str(linearAccel.y))
-                print('accZ: ' + str(linearAccel.z))
+                # tmp = sp.call('clear', shell=True)  # clears the screen
+                # print('roll: ' + str(roll_pitch_yaw.x))
+                # print('pitch: ' + str(roll_pitch_yaw.y))
+                # print('yaw: ' + str(roll_pitch_yaw.z))
+                # print('accX: ' + str(linearAccel.x))
+                # print('accY: ' + str(linearAccel.y))
+                # print('accZ: ' + str(linearAccel.z))
 
                 nowTime = float(datetime.now().timestamp())
                 t = (nowTime - startTime)
