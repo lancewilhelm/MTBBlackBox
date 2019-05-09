@@ -142,7 +142,7 @@ void loop(std::ofstream &myfile, std::clock_t &clockstart) {
         // Record the time
         double duration;
         duration = ( std::clock() - clockstart ) / (double) CLOCKS_PER_SEC;
-        myfile << std::setprecision(3) << duration << ",";
+        myfile << std::setprecision(6) << duration << ",";
 
         // Start going down and displaying data
         #ifdef OUTPUT_READABLE_QUATERNION
@@ -216,7 +216,7 @@ int main() {
     // Initialize file for recording, write the first row of it for a header
     std::ofstream myfile;
     myfile.open ("data/data.csv");
-    myfile << "t, yaw, pitch, roll, arealX, arealY, arealZ, aworldX, aworldY, aworldZ\n";
+    myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ\n";
 
     for (;;)
         loop(myfile, clockstart);
