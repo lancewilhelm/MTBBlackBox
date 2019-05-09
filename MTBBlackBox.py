@@ -93,7 +93,7 @@ def main(args):
 
                 nowTime = float(datetime.now().timestamp())
                 t = (nowTime - startTime)
-                full_row_temp = [("%.4f" % t), ("%.4f" % roll_pitch_yaw.x), ("%.4f" % roll_pitch_yaw.y), ("%.4f" % roll_pitch_yaw.z), ("%.4f" % linearAccel.x), ("%.4f" % linearAccel.y), ("%.4f" % linearAccel.z)]
+                full_row_temp = [("%.6f" % t), ("%.4f" % roll_pitch_yaw.x), ("%.4f" % roll_pitch_yaw.y), ("%.4f" % roll_pitch_yaw.z), ("%.4f" % linearAccel.x), ("%.4f" % linearAccel.y), ("%.4f" % linearAccel.z)]
 
             # Open the CSV file and write the data
             with open(outputCSVFilename, 'a') as f:
