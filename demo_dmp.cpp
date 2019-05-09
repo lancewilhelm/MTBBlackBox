@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <iostream>
+#include <fstream>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -117,7 +119,7 @@ void setup() {
 // ===                    MAIN PROGRAM LOOP                     ===
 // ================================================================
 
-void loop() {
+void loop(std::ofstream &myfile) {
     // if programming failed, don't try to do anything
     if (!dmpReady) return;
     // get current FIFO count
@@ -152,6 +154,7 @@ void loop() {
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
             printf("ypr  %7.2f %7.2f %7.2f    ", ypr[0] * 180/M_PI, ypr[1] * 180/M_PI, ypr[2] * 180/M_PI);
+            myfile << "%7.2f, %7.2f, %7.2f,", ypr[0] * 180/M_PI, ypr[1] * 180/M_PI, ypr[2] * 180/M_PI;
         #endif
 
         #ifdef OUTPUT_READABLE_REALACCEL
@@ -161,6 +164,7 @@ void loop() {
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
             printf("areal %6d %6d %6d    ", aaReal.x, aaReal.y, aaReal.z);
+            myfile << "%6d, %6d, %6d,", aaReal.x, aaReal.y, aaReal.z;
         #endif
 
         #ifdef OUTPUT_READABLE_WORLDACCEL
@@ -171,6 +175,7 @@ void loop() {
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
             printf("aworld %6d %6d %6d    ", aaWorld.x, aaWorld.y, aaWorld.z);
+            myfile << "%6d, %6d, %6d,", aaWorld.x, aaWorld.y, aaWorld.z;
         #endif
 
         #ifdef OUTPUT_TEAPOT
@@ -186,6 +191,7 @@ void loop() {
             Serial.write(teapotPacket, 14);
             teapotPacket[11]++; // packetCount, loops at 0xFF on purpose
         #endif
+        myfile << "\n";
         printf("\n");
     }
 }
@@ -193,8 +199,14 @@ void loop() {
 int main() {
     setup();
     usleep(100000);
-    for (;;)
-        loop();
 
+    std::ofstream myfile;
+    myfile.open ("data/data.csv");
+    myfile << "t, yaw, pitch, roll, arealX, arealY, arealZ, aworldX, aworldY, aworldZ\n";
+
+    for (;;)
+        loop(myfile);
+
+    myfile.close();
     return 0;
 }
