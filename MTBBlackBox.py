@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import math
 import time
-import datetime
+from datetime import datetime, timedelta
 import subprocess as sp
 import csv
 import sys
