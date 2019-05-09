@@ -58,7 +58,7 @@ def main(args):
         f.close()
 
     print("Running...")
-    startTime = time.time_ns()
+    startTime = datetime.now()
 
     try:
         while True:
@@ -91,7 +91,7 @@ def main(args):
                 print('accY: ' + str(linearAccel.y))
                 print('accZ: ' + str(linearAccel.z))
 
-                t = float((time.time_ns() - startTime) * (10**9))
+                t = float((datetime.now() - startTime))
                 full_row_temp = [("%.4f" % t), ("%.4f" % roll_pitch_yaw.x), ("%.4f" % roll_pitch_yaw.y), ("%.4f" % roll_pitch_yaw.z), ("%.4f" % linearAccel.x), ("%.4f" % linearAccel.y), ("%.4f" % linearAccel.z)]
 
             # Open the CSV file and write the data
