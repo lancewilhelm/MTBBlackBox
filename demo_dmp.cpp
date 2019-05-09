@@ -212,6 +212,7 @@ int main() {
 
     // Start the clock for time purposes
     std::clock_t clockstart;
+    clockstart = std::clock();
 
     // Initialize file for recording, write the first row of it for a header
     std::ofstream myfile;
