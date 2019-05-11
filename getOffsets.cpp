@@ -175,7 +175,7 @@ void SetOffsets(int TheOffsets[6])
     currentOffset[5] = mpu.getZGyroOffset();
 
     for (int i = iAx; i <= iGz; i++){
-      printf("%i", currentOffset[i]);
+      printf("%i, ", currentOffset[i]);
     }
     printf("\n");
   } // SetOffsets
