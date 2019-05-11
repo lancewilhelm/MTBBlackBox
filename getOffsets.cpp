@@ -66,8 +66,13 @@ and so on.
 
 // I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
 // for both classes must be in the include path of your project
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <cstdint>
+#include <string.h>
+#include <math.h>
 #include "I2Cdev.h"
-#include "MPU6050.h"
 #include "MPU6050_6Axis_MotionApps20.h"
 
 // class default I2C address is 0x68
@@ -120,8 +125,8 @@ void GetSmoothed()
         mpu.getMotion6(&RawValue[iAx], &RawValue[iAy], &RawValue[iAz],
                              &RawValue[iGx], &RawValue[iGy], &RawValue[iGz]);
         if ((i % 500) == 0)
-          printf(PERIOD);
-        delayMicroseconds(usDelay);
+          printf("%c", PERIOD);
+        usleep(usDelay);
         for (int j = iAx; j <= iGz; j++)
           Sums[j] = Sums[j] + RawValue[j];
       } // get sums
@@ -133,6 +138,13 @@ void GetSmoothed()
       { Smoothed[i] = (Sums[i] + N/2) / N ; }
   } // GetSmoothed
 
+  void SetAveraging(int NewN)
+    { N = NewN;
+      printf("averaging ");
+      printf("%i", N);
+      printf("\n readings each time");
+     } // SetAveraging
+     
 void Initialize()
   {
     // initialize device
@@ -160,19 +172,19 @@ void ShowProgress()
         printf("\tXAccel\t\t\tYAccel\t\t\t\tZAccel\t\t\tXGyro\t\t\tYGyro\t\t\tZGyro");
         LinesOut = 0;
       } // show header
-    printf(BLANK);
+    printf("%c", BLANK);
     for (int i = iAx; i <= iGz; i++)
-      { printf(LBRACKET);
-        printf(LowOffset[i]),
-        printf(COMMA);
-        printf(HighOffset[i]);
+      { printf("%c", LBRACKET);
+        printf("%i", LowOffset[i]),
+        printf("%c", COMMA);
+        printf("%i", HighOffset[i]);
         printf("] --> [");
-        printf(LowValue[i]);
-        printf(COMMA);
-        printf(HighValue[i]);
+        printf("%i", LowValue[i]);
+        printf("%c", COMMA);
+        printf("%i", HighValue[i]);
         if (i == iGz)
           { printf("\n");
-            printf(RBRACKET); }
+            printf("%c", RBRACKET); }
         else
           { printf("]\t"); }
       }
@@ -180,8 +192,8 @@ void ShowProgress()
   } // ShowProgress
 
 void PullBracketsIn()
-  { boolean AllBracketsNarrow;
-    boolean StillWorking;
+  { bool AllBracketsNarrow;
+    bool StillWorking;
     int NewOffset[6];
 
     printf("\n\nclosing in:");
@@ -226,7 +238,7 @@ void PullBracketsIn()
   } // PullBracketsIn
 
 void PullBracketsOut()
-  { boolean Done = false;
+  { bool Done = false;
     int NextLowOffset[6];
     int NextHighOffset[6];
 
@@ -267,13 +279,6 @@ void PullBracketsOut()
           }
      } // keep going
   } // PullBracketsOut
-
-void SetAveraging(int NewN)
-  { N = NewN;
-    printf("averaging ");
-    printf(N);
-    printf("\n readings each time");
-   } // SetAveraging
 
 void setup()
   { Initialize();
