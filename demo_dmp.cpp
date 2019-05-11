@@ -240,7 +240,7 @@ int main() {
 
     // Open the file
     timestamp = std::chrono::system_clock::now().time_since_epoch();
-    cout << timestamp;
+    std::cout << timestamp;
     myfile.open ("data/data.csv");
     myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ\n";
 
