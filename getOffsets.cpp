@@ -155,12 +155,6 @@ void Initialize()
     printf("Testing device connections...\n");
     printf(mpu.testConnection() ? "MPU6050 connection successful\n" : "MPU6050 connection failed\n");
 
-    // supply your own gyro offsets here, scaled for min sensitivity
-    mpu.setXGyroOffset(220);
-    mpu.setYGyroOffset(76);
-    mpu.setZGyroOffset(-85);
-    mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
-
   } // Initialize
 
 void SetOffsets(int TheOffsets[6])
@@ -292,7 +286,7 @@ void setup(){
       { // set targets and initial guesses
         Target[i] = 0; // must fix for ZAccel
         HighOffset[i] = 0;
-        LowOffset[i] = 0;
+        LowOffset[i] = -10000;
       } // set targets and initial guesses
     Target[iAz] = 16384;
     SetAveraging(NFast);
