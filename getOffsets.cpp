@@ -66,9 +66,9 @@ and so on.
 
 // I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
 // for both classes must be in the include path of your project
-#include <I2Cdev.h>
-#include <MPU6050.h>
-#include <stdio.h>
+#include "I2Cdev.h"
+#include "MPU6050.h"
+#include "MPU6050_6Axis_MotionApps20.h"
 
 // class default I2C address is 0x68
 // specific I2C addresses may be passed as a parameter here
