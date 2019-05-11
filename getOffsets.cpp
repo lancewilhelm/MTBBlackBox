@@ -183,7 +183,7 @@ void ShowProgress()
         printf("%c", COMMA);
         printf("%i", HighValue[i]);
         if (i == iGz)
-          {}
+          {
             printf("%c\n", RBRACKET); }
         else
           { printf("]\t"); }
