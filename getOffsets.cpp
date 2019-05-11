@@ -166,7 +166,7 @@ void SetOffsets(int TheOffsets[6])
     mpu.setYGyroOffset (TheOffsets [iGy]);
     mpu.setZGyroOffset (TheOffsets [iGz]);
 
-    cout <<  mpu.getXAccelOffset() << " " << mpu.getYAccelOffset() << " " << mpu.getZAccelOffset() << " " << mpu.getXGyroOffset() << " " << mpu.getYGyroOffset() << " " << mpu.getZGyroOffset() << "/n";
+    std::cout <<  mpu.getXAccelOffset() << " " << mpu.getYAccelOffset() << " " << mpu.getZAccelOffset() << " " << mpu.getXGyroOffset() << " " << mpu.getYGyroOffset() << " " << mpu.getZGyroOffset() << "/n";
   } // SetOffsets
 
 void ShowProgress()
