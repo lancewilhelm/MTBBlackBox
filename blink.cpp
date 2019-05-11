@@ -1,4 +1,5 @@
 #include <wiringPi.h>
+#include <iostream>
 
 int main() {
 
@@ -17,6 +18,7 @@ int main() {
     if(digitalRead (4) == HIGH){
       digitalWrite(0, HIGH);
       digitalWrite(1, HIGH);
+      std::cout << "Button Pressed\n";
       break;
     }
   }
