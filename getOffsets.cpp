@@ -159,8 +159,15 @@ void Initialize()
 
   } // Initialize
 
-void SetOffsets(int TheOffsets[6])
-  { mpu.setXAccelOffset(TheOffsets [iAx]);
+void SetOffsets(int TheOffsets[6]){
+    //debuggin
+    printf("Offsets to write:\n");
+    for (int i = iAx; i <= iGz; i++){
+      printf("%i, ", TheOffsets[i]);
+    }
+    printf("\n");
+
+    mpu.setXAccelOffset(TheOffsets [iAx]);
     mpu.setYAccelOffset(TheOffsets [iAy]);
     mpu.setZAccelOffset(TheOffsets [iAz]);
     mpu.setXGyroOffset (TheOffsets [iGx]);
@@ -174,6 +181,8 @@ void SetOffsets(int TheOffsets[6])
     currentOffset[4] = mpu.getYGyroOffset();
     currentOffset[5] = mpu.getZGyroOffset();
 
+    //debuggin
+    printf("Offsets as read:\n");
     for (int i = iAx; i <= iGz; i++){
       printf("%i, ", currentOffset[i]);
     }
