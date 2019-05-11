@@ -239,7 +239,7 @@ int main() {
     std::ofstream myfile;
 
     // Open the file
-    timestamp = std::chrono::system_clock::now().time_since_epoch();
+    std::chrono::duration<std::chrono::system_clock> timestamp = std::chrono::system_clock::now().time_since_epoch();
     std::cout << timestamp;
     myfile.open ("data/data.csv");
     myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ\n";
