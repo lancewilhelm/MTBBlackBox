@@ -97,7 +97,7 @@ const int iGy = 4;
 const int iGz = 5;
 
 const int usDelay = 3150;   // empirical, to hold sampling to 200 Hz
-const int NFast =  1000;    // the bigger, the better (but slower)
+const int NFast =  200;    // the bigger, the better (but slower)
 const int NSlow = 10000;    // ..
 const int LinesBetweenHeaders = 5;
       int LowValue[6];
@@ -154,6 +154,12 @@ void Initialize()
     // verify connection
     printf("Testing device connections...\n");
     printf(mpu.testConnection() ? "MPU6050 connection successful\n" : "MPU6050 connection failed\n");
+
+    // supply your own gyro offsets here, scaled for min sensitivity
+    mpu.setXGyroOffset(220);
+    mpu.setYGyroOffset(76);
+    mpu.setZGyroOffset(-85);
+    mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
 
   } // Initialize
 
