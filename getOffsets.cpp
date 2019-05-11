@@ -170,7 +170,7 @@ void SetOffsets(int TheOffsets[6])
     currentOffset[0] = mpu.getXAccelOffset();
     currentOffset[1] = mpu.getYAccelOffset();
     currentOffset[2] = mpu.getZAccelOffset();
-    currentOffset[3] = mpu.getXGryoOffset();
+    currentOffset[3] = mpu.getXGyroOffset();
     currentOffset[4] = mpu.getYGyroOffset();
     currentOffset[5] = mpu.getZGyroOffset();
 
