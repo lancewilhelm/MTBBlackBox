@@ -1,3 +1,3 @@
 #!/bin/bash
 echo "ACTIVATE BLACKICE NEBULA STARTRON"
-sudo mtbbb
+sudo /home/pi/mtbblackbox/mtbbb
