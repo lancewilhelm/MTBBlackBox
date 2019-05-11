@@ -166,7 +166,7 @@ void SetOffsets(int TheOffsets[6])
     mpu.setYGyroOffset (TheOffsets [iGy]);
     mpu.setZGyroOffset (TheOffsets [iGz]);
 
-    std::cout <<  mpu.getXAccelOffset() << " " << mpu.getYAccelOffset() << " " << mpu.getZAccelOffset() << " " << mpu.getXGyroOffset() << " " << mpu.getYGyroOffset() << " " << mpu.getZGyroOffset() << "/n";
+    std::cout << mpu.getXAccelOffset() << " " << mpu.getYAccelOffset() << " " << mpu.getZAccelOffset() << " " << mpu.getXGyroOffset() << " " << mpu.getYGyroOffset() << " " << mpu.getZGyroOffset() << "/n";
   } // SetOffsets
 
 void ShowProgress()
@@ -235,7 +235,7 @@ void PullBracketsIn()
                 LowValue[i] = Smoothed[i];
               } // use upper half
           } // closing in
-        ShowProgress();
+        //ShowProgress();
       } // still working
 
   } // PullBracketsIn
@@ -275,7 +275,7 @@ void PullBracketsOut()
             else
               { NextHighOffset[i] = HighOffset[i]; }
           } // got high values
-        ShowProgress();
+        //ShowProgress();
         for (int i = iAx; i <= iGz; i++)
           { LowOffset[i] = NextLowOffset[i];   // had to wait until ShowProgress done
             HighOffset[i] = NextHighOffset[i]; // ..
