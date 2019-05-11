@@ -78,6 +78,7 @@ uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\
 // Define for the LEDS
 #define GREEN 0
 #define RED 1
+#define BUTTON 4
 
 // ================================================================
 // ===                      INITIAL SETUP                       ===
@@ -90,6 +91,7 @@ void setup() {
     wiringPiSetup();
     pinMode(GREEN, OUTPUT);
     pinMode(RED, OUTPUT);
+    pinMode(BUTTON, INPUT);
     digitalWrite(RED, HIGH);
     digitalWrite(GREEN, LOW);
 
@@ -247,12 +249,28 @@ int main() {
     myfile.open (filename);
     myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ\n";
 
-    for (;;)
-        loop(myfile, t0, t1);
+    for (;;){
+      // Run the main loop
+      loop(myfile, t0, t1);
 
+      // Check for button press. Exit loop if pressed
+      if(digitalRead(BUTTON) == HIGH){
+        break;
+      }
+    }
+
+    // Close the file
     myfile.close();
+
+    // Signal the end of the program
     digitalWrite(RED, HIGH);
     digitalWrite(GREEN, LOW);
+    delay(500);
+    digitalWrite(RED, LOW);
+    delay(500);
+    digitalWrite(RED, HIGH);
+    delay(500);
+    digitalWrite(RED, LOW);
 
     return 0;
 }
