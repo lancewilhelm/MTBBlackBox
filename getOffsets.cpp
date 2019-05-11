@@ -167,12 +167,12 @@ void SetOffsets(int TheOffsets[6]){
     }
     printf("\n");
 
-    mpu.setXAccelOffset(TheOffsets [iAx]);
-    mpu.setYAccelOffset(TheOffsets [iAy]);
-    mpu.setZAccelOffset(TheOffsets [iAz]);
-    mpu.setXGyroOffset(TheOffsets [iGx]);
-    mpu.setYGyroOffset(TheOffsets [iGy]);
-    mpu.setZGyroOffset(TheOffsets [iGz]);
+    mpu.setXAccelOffset(TheOffsets[iAx]);
+    mpu.setYAccelOffset(TheOffsets[iAy]);
+    mpu.setZAccelOffset(TheOffsets[iAz]);
+    mpu.setXGyroOffsetUser(TheOffsets[iGx]);
+    mpu.setYGyroOffsetUser(TheOffsets[iGy]);
+    mpu.setZGyroOffsetUser(TheOffsets[iGz]);
 
     currentOffset[0] = mpu.getXAccelOffset();
     currentOffset[1] = mpu.getYAccelOffset();
