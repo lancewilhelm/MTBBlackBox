@@ -155,12 +155,6 @@ void Initialize()
     printf("Testing device connections...\n");
     printf(mpu.testConnection() ? "MPU6050 connection successful\n" : "MPU6050 connection failed\n");
 
-    mpu.setXAccelOffset(0);
-    mpu.setYAccelOffset(0);
-    mpu.setZAccelOffset(0);
-    mpu.setXGyroOffset (0);
-    mpu.setYGyroOffset (0);
-    mpu.setZGyroOffset (0);
   } // Initialize
 
 void SetOffsets(int TheOffsets[6])
@@ -239,7 +233,6 @@ void PullBracketsIn()
               } // use upper half
           } // closing in
         ShowProgress();
-        StillWorking = false;
       } // still working
 
   } // PullBracketsIn
@@ -274,7 +267,7 @@ void PullBracketsOut()
             HighValue[i] = Smoothed[i];
             if (HighValue[i] <= Target[i])
               { Done = false;
-                NextHighOffset[i] = HighOffset[i] + 100000;
+                NextHighOffset[i] = HighOffset[i] + 1000;
               }
             else
               { NextHighOffset[i] = HighOffset[i]; }
@@ -284,7 +277,6 @@ void PullBracketsOut()
           { LowOffset[i] = NextLowOffset[i];   // had to wait until ShowProgress done
             HighOffset[i] = NextHighOffset[i]; // ..
           }
-          Done = true;
      } // keep going
   } // PullBracketsOut
 
