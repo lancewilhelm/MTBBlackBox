@@ -237,6 +237,10 @@ int main() {
 
     // Initialize file for recording, write the first row of it for a header
     std::ofstream myfile;
+
+    // Open the file
+    timestamp = std::chrono::system_clock::now().time_since_epoch();
+    cout << timestamp;
     myfile.open ("data/data.csv");
     myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ\n";
 
