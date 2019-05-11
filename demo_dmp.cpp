@@ -9,6 +9,7 @@
 #include <math.h>
 #include <chrono>
 #include <ctime>
+#include <wiringPi.h>
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
 
@@ -35,7 +36,6 @@ MPU6050 mpu;
 // Also note that yaw/pitch/roll angles suffer from gimbal lock (for
 // more info, see: http://en.wikipedia.org/wiki/Gimbal_lock)
 #define OUTPUT_READABLE_YAWPITCHROLL
-
 // uncomment "OUTPUT_READABLE_REALACCEL" if you want to see acceleration
 // components with gravity removed. This acceleration reference frame is
 // not compensated for orientation, so +X is always +X according to the
@@ -54,6 +54,7 @@ MPU6050 mpu;
 //#define OUTPUT_TEAPOT
 
 // MPU control/status vars
+
 bool dmpReady = false;  // set true if DMP init was successful
 uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
 uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
@@ -73,6 +74,9 @@ float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gra
 // packet structure for InvenSense teapot demo
 uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
 
+// Define for the LEDS
+#define GREEN 0
+#define RED 1
 
 // ================================================================
 // ===                      INITIAL SETUP                       ===
@@ -135,10 +139,16 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         mpu.resetFIFO();
         printf("FIFO overflow!\n");
 
+        digitalWrite(RED, HIGH);
+        digitalWrite(GREEN, HIGH);
+
     // otherwise, check for DMP data ready interrupt (this should happen frequently)
     } else if (fifoCount >= 42) {
         // read a packet from FIFO
         mpu.getFIFOBytes(fifoBuffer, packetSize);
+
+        digitalWrite(RED, LOW);
+        digitalWrite(GREEN, HIGH);
 
         // Record the time
         t1 = std::chrono::high_resolution_clock::now();
@@ -208,7 +218,16 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 }
 
 int main() {
+    // Setup the MPU6050 stuff
     setup();
+
+    // Setup the GPIO stuff for the LEDs and buttons
+    wiringPiSetup();
+    pinMode(GREEN, OUTPUT);
+    pinMode(RED, OUTPUT);
+    digitalWrite(RED, HIGH);
+    digitalWrite(GREEN, LOW);
+
     usleep(100000);
 
     // Start the clock for time purposes
@@ -225,5 +244,8 @@ int main() {
         loop(myfile, t0, t1);
 
     myfile.close();
+    digitalWrite(RED, HIGH);
+    digitalWrite(GREEN, LOW);
+
     return 0;
 }

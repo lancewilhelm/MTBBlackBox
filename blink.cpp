@@ -4,7 +4,7 @@ int main() {
 
   wiringPiSetup();
   pinMode(0, OUTPUT);
-  pinMode(1, OUTPUT)
+  pinMode(1, OUTPUT);
 
   for(;;){
     digitalWrite(0, HIGH);
