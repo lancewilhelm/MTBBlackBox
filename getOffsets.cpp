@@ -98,7 +98,7 @@ const int iGy = 4;
 const int iGz = 5;
 
 const int usDelay = 3150;   // empirical, to hold sampling to 200 Hz
-const int NFast =  200;    // the bigger, the better (but slower)
+const int NFast =  1000;    // the bigger, the better (but slower)
 const int NSlow = 10000;    // ..
 const int LinesBetweenHeaders = 5;
       int LowValue[6];
@@ -308,8 +308,21 @@ void setup(){
     for (int i = iAx; i <= iGz; i++)
       { // set targets and initial guesses
         Target[i] = 0; // must fix for ZAccel
-        HighOffset[i] = 0;
-        LowOffset[i] = 0;
+
+        HighOffset[0] = -2081;
+        HighOffset[1] = 1071;
+        HighOffset[2] = 1541;
+        HighOffset[3] = -18;
+        HighOffset[4] = -51;
+        HighOffset[5] = -68;
+
+        LowOffset[0] = -2081;
+        LowOffset[1] = 1071;
+        LowOffset[2] = 1541;
+        LowOffset[3] = -18;
+        LowOffset[4] = -51;
+        LowOffset[5] = -68;
+
       } // set targets and initial guesses
     Target[iAz] = 16384;
     SetAveraging(NFast);
