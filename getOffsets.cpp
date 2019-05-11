@@ -170,9 +170,9 @@ void SetOffsets(int TheOffsets[6]){
     mpu.setXAccelOffset(TheOffsets [iAx]);
     mpu.setYAccelOffset(TheOffsets [iAy]);
     mpu.setZAccelOffset(TheOffsets [iAz]);
-    mpu.setXGyroOffset (TheOffsets [iGx]);
-    mpu.setYGyroOffset (TheOffsets [iGy]);
-    mpu.setZGyroOffset (TheOffsets [iGz]);
+    mpu.setXGyroOffset(TheOffsets [iGx]);
+    mpu.setYGyroOffset(TheOffsets [iGy]);
+    mpu.setZGyroOffset(TheOffsets [iGz]);
 
     currentOffset[0] = mpu.getXAccelOffset();
     currentOffset[1] = mpu.getYAccelOffset();
