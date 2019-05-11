@@ -199,8 +199,8 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             mpu.dmpGetAccel(&aa, fifoBuffer);
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-            printf("areal %6d %6d %6d    ", ((float)aaReal.x / 8192), ((float)aaReal.y / 8192), ((float)aaReal.z / 8192));
-            myfile << ((float)aaReal.x / 8192) << "," << ((float)aaReal.y / 8192) << "," << ((float)aaReal.z / 8192) << ",";
+            printf("areal %6d %6d %6d    ", ((float)aaReal.x / 8192.0), ((float)aaReal.y / 8192.0), ((float)aaReal.z / 8192.0));
+            myfile << ((float)aaReal.x / 8192.0) << "," << ((float)aaReal.y / 8192.0) << "," << ((float)aaReal.z / 8192.0) << ",";
         #endif
 
         #ifdef OUTPUT_READABLE_WORLDACCEL
@@ -210,8 +210,8 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             mpu.dmpGetAccel(&aa, fifoBuffer);
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-            printf("aworld %6d %6d %6d    ", ((float)aaWorld.x / 8192), ((float)aaWorld.y / 8192), ((float)aaWorld.z / 8192));
-            myfile << ((float)aaWorld.x / 8192) << "," << ((float)aaWorld.y / 8192) << "," << ((float)aaWorld.z / 8192);
+            printf("aworld %6d %6d %6d    ", ((float)aaWorld.x / 8192.0), ((float)aaWorld.y / 8192.0), ((float)aaWorld.z / 8192.0));
+            myfile << ((float)aaWorld.x / 8192.0) << "," << ((float)aaWorld.y / 8192.0) << "," << ((float)aaWorld.z / 8192.0);
         #endif
 
         myfile << "\n";
