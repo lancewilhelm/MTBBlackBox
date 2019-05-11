@@ -267,7 +267,7 @@ void PullBracketsOut()
             HighValue[i] = Smoothed[i];
             if (HighValue[i] <= Target[i])
               { Done = false;
-                NextHighOffset[i] = HighOffset[i] + 1000;
+                NextHighOffset[i] = HighOffset[i] + 100000;
               }
             else
               { NextHighOffset[i] = HighOffset[i]; }
