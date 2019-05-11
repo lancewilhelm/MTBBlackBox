@@ -107,6 +107,16 @@ void setup() {
     printf("Initializing DMP...\n");
     devStatus = mpu.dmpInitialize();
 
+    mpu.setXAccelOffset(-2081);
+    mpu.setYAccelOffset(1071);
+    mpu.setZAccelOffset(1541);
+    mpu.setXGyroOffsetUser(-18);
+    mpu.setYGyroOffsetUser(-51);
+    mpu.setZGyroOffsetUser(-68);
+    mpu.setXGyroOffset(-18);
+    mpu.setYGyroOffset(-51);
+    mpu.setZGyroOffset(-68);
+
     // make sure it worked (returns 0 if so)
     if (devStatus == 0) {
         // turn on the DMP, now that it's ready
