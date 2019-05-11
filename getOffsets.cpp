@@ -297,7 +297,7 @@ void setup(){
     printf("\n-------------- done --------------");
   } // setup
 
-void main()
+int main()
   {
     setup();
     return 0;
