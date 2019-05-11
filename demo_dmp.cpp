@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
-#include <string.h>
+#include <string>
 #include <sstream>
 #include <math.h>
 #include <chrono>
