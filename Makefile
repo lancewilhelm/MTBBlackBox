@@ -9,10 +9,10 @@ RAW_OBJS = demo_raw.o
 $(CMN_OBJS) $(DMP_OBJS) $(RAW_OBJS) : $(HDRS)
 
 demo_raw: $(CMN_OBJS) $(RAW_OBJS)
-	$(CXX) -o $@ $^ -lm
+	$(CXX) -o $@ $^ -lm -lwiringPi
 
 demo_dmp: $(CMN_OBJS) $(DMP_OBJS)
-	$(CXX) -o $@ $^ -lm
+	$(CXX) -o $@ $^ -lm -lwiringPi
 
 # 'make test_3d' will give you a test_3d that is controlled via the keyboard rather
 # than by moving the MPU6050.  Use the keys x, X, y, Y, z, Z, and q to exit.
