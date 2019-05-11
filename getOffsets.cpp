@@ -108,6 +108,7 @@ const int LinesBetweenHeaders = 5;
       int HighOffset[6];
       int Target[6];
       int LinesOut;
+      int currentOffset[6];
       int N;
 
 void ForceHeader()
@@ -166,7 +167,17 @@ void SetOffsets(int TheOffsets[6])
     mpu.setYGyroOffset (TheOffsets [iGy]);
     mpu.setZGyroOffset (TheOffsets [iGz]);
 
-    std::cout << mpu.getXAccelOffset() << ' ' << mpu.getYAccelOffset() << ' ' << mpu.getZAccelOffset() << ' ' << mpu.getXGyroOffset() << ' ' << mpu.getYGyroOffset() << ' ' << mpu.getZGyroOffset() << "/n";
+    currentOffset[0] = mpu.getXAccelOffset();
+    currentOffset[1] = mpu.getYAccelOffset();
+    currentOffset[2] = mpu.getZAccelOffset();
+    currentOffset[3] = mpu.getXGryoOffset();
+    currentOffset[4] = mpu.getYGyroOffset();
+    currentOffset[5] = mpu.getZGyroOffset();
+
+    for (int i = iAx; i <= iGz; i++){
+      printf("%i", currentOffset[i]);
+    }
+    printf("\n");
   } // SetOffsets
 
 void ShowProgress()
