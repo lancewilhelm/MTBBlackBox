@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <string.h>
+#include <sstream>
 #include <math.h>
 #include <chrono>
 #include <ctime>
@@ -240,7 +241,10 @@ int main() {
 
     // Open the file
     std::chrono::seconds timestamp = std::chrono::duration_cast< std::chrono::seconds >(std::chrono::system_clock::now().time_since_epoch());
-    myfile.open ("data/data-%d.csv", timestamp.count());
+    std::ostringstream os;
+    os << "data/data-" << timestamp.count() << ".csv";
+    string filename = os.str();
+    myfile.open (filename);
     myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ\n";
 
     for (;;)
