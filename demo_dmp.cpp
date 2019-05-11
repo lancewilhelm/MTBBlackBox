@@ -220,6 +220,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 int main() {
     // Setup the MPU6050 stuff
     setup();
+    usleep(100000);   // This is important I think...
 
     // Setup the GPIO stuff for the LEDs and buttons
     wiringPiSetup();
@@ -227,8 +228,6 @@ int main() {
     pinMode(RED, OUTPUT);
     digitalWrite(RED, HIGH);
     digitalWrite(GREEN, LOW);
-
-    usleep(100000);
 
     // Start the clock for time purposes
     std::chrono::time_point<std::chrono::high_resolution_clock> t0, t1;
