@@ -98,7 +98,7 @@ const int iGy = 4;
 const int iGz = 5;
 
 const int usDelay = 3150;   // empirical, to hold sampling to 200 Hz
-const int NFast =  20;    // the bigger, the better (but slower)
+const int NFast =  200;    // the bigger, the better (but slower)
 const int NSlow = 10000;    // ..
 const int LinesBetweenHeaders = 5;
       int LowValue[6];
