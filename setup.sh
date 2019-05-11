@@ -9,8 +9,8 @@ cd ~/mtbblackbox
 sudo cp ~/mtbblackbox/setup/modules /etc/
 sudo cp ~/mtbblackbox/setup/config.txt /boot/
 
-sudo rm /var/spool/cron/crontabs/root
-sudo cp ~/dronespacepigates/crontabScript /var/spool/cron/crontabs/root
-sudo chmod 600 /var/spool/cron/crontabs/root
+sudo rm /var/spool/cron/crontabs/pi
+sudo cp ~/mtbblackbox/setup/crontabScript /var/spool/cron/crontabs/pi
+sudo chmod 600 /var/spool/cron/crontabs/pi
 
 sudo reboot now
