@@ -71,6 +71,7 @@ and so on.
 #include <unistd.h>
 #include <cstdint>
 #include <string.h>
+#include <iostream>
 #include <math.h>
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
@@ -164,6 +165,8 @@ void SetOffsets(int TheOffsets[6])
     mpu.setXGyroOffset (TheOffsets [iGx]);
     mpu.setYGyroOffset (TheOffsets [iGy]);
     mpu.setZGyroOffset (TheOffsets [iGz]);
+
+    cout <<  mpu.getXAccelOffset() << " " << mpu.getYAccelOffset() << " " << mpu.getZAccelOffset() << " " << mpu.getXGyroOffset() << " " << mpu.getYGyroOffset() << " " << mpu.getZGyroOffset() << "/n";
   } // SetOffsets
 
 void ShowProgress()
