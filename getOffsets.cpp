@@ -142,7 +142,7 @@ void GetSmoothed()
     { N = NewN;
       printf("averaging ");
       printf("%i", N);
-      printf("\n readings each time");
+      printf(" readings each time\n");
      } // SetAveraging
 
 void Initialize()
@@ -169,7 +169,7 @@ void SetOffsets(int TheOffsets[6])
 void ShowProgress()
   { if (LinesOut >= LinesBetweenHeaders)
       { // show header
-        printf("\tXAccel\t\t\tYAccel\t\t\t\tZAccel\t\t\tXGyro\t\t\tYGyro\t\t\tZGyro");
+        printf("\tXAccel\t\t\tYAccel\t\t\t\tZAccel\t\t\tXGyro\t\t\tYGyro\t\t\tZGyro\n");
         LinesOut = 0;
       } // show header
     printf("%c", BLANK);
@@ -183,8 +183,8 @@ void ShowProgress()
         printf("%c", COMMA);
         printf("%i", HighValue[i]);
         if (i == iGz)
-          { printf("\n");
-            printf("%c", RBRACKET); }
+          {}
+            printf("%c\n", RBRACKET); }
         else
           { printf("]\t"); }
       }
@@ -196,7 +196,7 @@ void PullBracketsIn()
     bool StillWorking;
     int NewOffset[6];
 
-    printf("\n\nclosing in:");
+    printf("\nclosing in:\n");
     AllBracketsNarrow = false;
     ForceHeader();
     StillWorking = true;
@@ -242,7 +242,7 @@ void PullBracketsOut()
     int NextLowOffset[6];
     int NextHighOffset[6];
 
-    printf("\nexpanding:");
+    printf("expanding:\n");
     ForceHeader();
 
     while (!Done)
@@ -294,7 +294,7 @@ void setup(){
     PullBracketsOut();
     PullBracketsIn();
 
-    printf("\n-------------- done --------------");
+    printf("-------------- done --------------\n");
   } // setup
 
 int main()
