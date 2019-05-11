@@ -144,7 +144,7 @@ void GetSmoothed()
       printf("%i", N);
       printf("\n readings each time");
      } // SetAveraging
-     
+
 void Initialize()
   {
     // initialize device
@@ -280,8 +280,8 @@ void PullBracketsOut()
      } // keep going
   } // PullBracketsOut
 
-void setup()
-  { Initialize();
+void setup(){
+    Initialize();
     for (int i = iAx; i <= iGz; i++)
       { // set targets and initial guesses
         Target[i] = 0; // must fix for ZAccel
@@ -297,6 +297,8 @@ void setup()
     printf("\n-------------- done --------------");
   } // setup
 
-void loop()
+void main()
   {
+    setup();
+    return 0;
   } // loop
