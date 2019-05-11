@@ -139,16 +139,16 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         mpu.resetFIFO();
         printf("FIFO overflow!\n");
 
-        digitalWrite(RED, HIGH);
-        digitalWrite(GREEN, HIGH);
+        // digitalWrite(RED, HIGH);
+        // digitalWrite(GREEN, HIGH);
 
     // otherwise, check for DMP data ready interrupt (this should happen frequently)
     } else if (fifoCount >= 42) {
         // read a packet from FIFO
         mpu.getFIFOBytes(fifoBuffer, packetSize);
 
-        digitalWrite(RED, LOW);
-        digitalWrite(GREEN, HIGH);
+        // digitalWrite(RED, LOW);
+        // digitalWrite(GREEN, HIGH);
 
         // Record the time
         t1 = std::chrono::high_resolution_clock::now();
@@ -223,11 +223,11 @@ int main() {
     usleep(100000);   // This is important I think...
 
     // Setup the GPIO stuff for the LEDs and buttons
-    wiringPiSetup();
-    pinMode(GREEN, OUTPUT);
-    pinMode(RED, OUTPUT);
-    digitalWrite(RED, HIGH);
-    digitalWrite(GREEN, LOW);
+    // wiringPiSetup();
+    // pinMode(GREEN, OUTPUT);
+    // pinMode(RED, OUTPUT);
+    // digitalWrite(RED, HIGH);
+    // digitalWrite(GREEN, LOW);
 
     // Start the clock for time purposes
     std::chrono::time_point<std::chrono::high_resolution_clock> t0, t1;
@@ -243,8 +243,8 @@ int main() {
         loop(myfile, t0, t1);
 
     myfile.close();
-    digitalWrite(RED, HIGH);
-    digitalWrite(GREEN, LOW);
+    // digitalWrite(RED, HIGH);
+    // digitalWrite(GREEN, LOW);
 
     return 0;
 }
