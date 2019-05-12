@@ -41,7 +41,7 @@ int main()
       timestamp_t ts { gpsd_data->fix.time };
       auto latitude  { gpsd_data->fix.latitude };
       auto longitude { gpsd_data->fix.longitude };
-      auto speed     { gpsd_data->fix.spped };
+      auto speed     { gpsd_data->fix.speed };
       auto alt       { gpsd_data->fix.altitude };
 
       // convert GPSD's timestamp_t into time_t
