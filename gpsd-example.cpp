@@ -41,6 +41,8 @@ int main()
       timestamp_t ts { gpsd_data->fix.time };
       auto latitude  { gpsd_data->fix.latitude };
       auto longitude { gpsd_data->fix.longitude };
+      auto speed     { gpsd_data->fix.spped };
+      auto alt       { gpsd_data->fix.altitude };
 
       // convert GPSD's timestamp_t into time_t
       time_t seconds { (time_t)ts };
@@ -53,7 +55,7 @@ int main()
       // set decimal precision
       std::cout.precision(6);
       std::cout.setf(std::ios::fixed, std::ios::floatfield);
-      std::cout << time_str << "," << latitude << "," << longitude << std::endl;
+      std::cout << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
     }
   }
   return 0;
