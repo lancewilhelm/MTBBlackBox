@@ -8,7 +8,7 @@ MTBBB_OBJS = mtbbb.o
 $(CMN_OBJS) $(MTBBB_OBJS) : $(HDRS)
 
 mtbbb: $(CMN_OBJS) $(MTBBB_OBJS)
-	$(CXX) -Wall -std=c++14 -pedantic $(pkg-config --cflags --libs libgps) -o $@ $^ -lm -lwiringPi
+	$(CXX) -Wall -o $@ $^ -lm -lwiringPi -libgpsmm
 
 # 'make test_3d' will give you a test_3d that is controlled via the keyboard rather
 # than by moving the MPU6050.  Use the keys x, X, y, Y, z, Z, and q to exit.
