@@ -228,9 +228,9 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             std::cerr << "GPSD read error.\n";
             gpsfail = true;
           } else {
-            while (((gpsd_data = gps_rec.read()) == NULL) ||
+            if (((gpsd_data = gps_rec.read()) == NULL) ||
                    (gpsd_data->fix.mode < MODE_2D)) {
-              // Do nothing until fix
+              continue;
             }
 
             timestamp_t ts { gpsd_data->fix.time };
