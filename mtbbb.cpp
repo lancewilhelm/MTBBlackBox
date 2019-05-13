@@ -256,7 +256,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             auto time_str { oss.str() };
 
             // set decimal precision
-            std::precision(6);
+            std::setprecision(6);
             std::cout.setf(std::ios::fixed, std::ios::floatfield);
             std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
             std::cout << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << std::endl;
