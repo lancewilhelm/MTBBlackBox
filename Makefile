@@ -4,7 +4,7 @@ HDRS = helper_3dmath.h I2Cdev.h MPU6050_6Axis_MotionApps20.h MPU6050.h
 CMN_OBJS = I2Cdev.o MPU6050.o
 MTBBB_OBJS = mtbbb.o
 CFLAGS = 'pkg-config --cflags libgps'
-LDFLAGS = 'pkg-config --libs libgps'
+LDFLAGS = $(pkg-config --libs libgps)
 
 $(CMN_OBJS) $(MTBBB_OBJS) : $(HDRS)
 
