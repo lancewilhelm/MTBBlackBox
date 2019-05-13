@@ -2,6 +2,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <sstream>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -11,6 +12,7 @@
 #include <chrono>
 #include <ctime>
 #include <wiringPi.h>
+#include <libgpsmm.h>
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
 
@@ -67,6 +69,8 @@ VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measure
 VectorFloat gravity;    // [x, y, z]            gravity vector
 float euler[3];         // [psi, theta, phi]    Euler angle container
 float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+
+bool gpsfail = false;
 
 // Define for the LEDS
 #define GREEN 0
@@ -134,6 +138,15 @@ void setup() {
         // (if it's going to break, usually the code will be 1)
         printf("DMP Initialization failed (code %d)\n", devStatus);
     }
+
+    // Initialize GPS
+    gpsmm gps_rec("localhost", DEFAULT_GPSD_PORT);
+
+    if (gps_rec.stream(WATCH_ENABLE | WATCH_JSON) == NULL) {
+      std::cerr << "No GPSD running.\n";
+      gpsfail = true;
+    }
+
 }
 
 
@@ -144,7 +157,6 @@ void setup() {
 void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_resolution_clock::time_point &t1) {
     // if programming failed, don't try to do anything
     if (!dmpReady) return;
-
 
     // get current FIFO count
     fifoCount = mpu.getFIFOCount();
@@ -211,11 +223,46 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
             printf("aworld %6d %6d %6d    ", (static_cast<float>(aaWorld.x) / 4096), (static_cast<float>(aaWorld.y) / 4096), (static_cast<float>(aaWorld.z) / 4096));
-            myfile << (static_cast<float>(aaWorld.x) / 4096) << "," << (static_cast<float>(aaWorld.y) / 4096) << "," << (static_cast<float>(aaWorld.z) / 4096);
+            myfile << (static_cast<float>(aaWorld.x) / 4096) << "," << (static_cast<float>(aaWorld.y) / 4096) << "," << (static_cast<float>(aaWorld.z) / 4096) << ",";
         #endif
 
-        myfile << "\n";
-        printf("\n");
+        // Get GPS goodies if setup did not fail and we are not waiting for a packet
+        if(!gpsfail && gps_rec.waiting(1000000)){
+
+          // create a structure for the data
+          struct gps_data_t *gpsd_data;
+
+          if ((gpsd_data = gps_rec.read()) == NULL) {
+            std::cerr << "GPSD read error.\n";
+            gpsfail = true;
+          } else {
+            while (((gpsd_data = gps_rec.read()) == NULL) ||
+                   (gpsd_data->fix.mode < MODE_2D)) {
+              // Do nothing until fix
+            }
+
+            timestamp_t ts { gpsd_data->fix.time };
+            auto latitude  { gpsd_data->fix.latitude };
+            auto longitude { gpsd_data->fix.longitude };
+            auto speed     { gpsd_data->fix.speed };
+            auto alt       { gpsd_data->fix.altitude };
+
+            // convert GPSD's timestamp_t into time_t
+            time_t seconds { (time_t)ts };
+            auto   tm = *std::localtime(&seconds);
+
+            std::ostringstream oss;
+            oss << std::put_time(&tm, "%d-%m-%Y %H:%M:%S");
+            auto time_str { oss.str() };
+
+            // set decimal precision
+            std::precision(6);
+            std::cout.setf(std::ios::fixed, std::ios::floatfield);
+            std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
+            std::cout << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << std::endl;
+          }
+
+        }
     }
 }
 
@@ -237,7 +284,7 @@ int main() {
     os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
     std::string filename = os.str();
     myfile.open (filename);
-    myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ\n";
+    myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt\n";
 
     for (;;){
       // Run the main loop

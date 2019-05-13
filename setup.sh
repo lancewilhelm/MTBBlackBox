@@ -17,6 +17,7 @@ sudo cp ~/mtbblackbox/setup/crontabScript /var/spool/cron/crontabs/pi
 sudo chmod 600 /var/spool/cron/crontabs/pi
 
 # For GPS
-sudo systemctl disable serial-getty@ttyAMA0.service
+# check the booksmarks later and put in here
+sudo ln -s /lib/systemd/system/gpsd.service /etc/systemd/system/multi-user.target.wants/
 
 sudo reboot now
