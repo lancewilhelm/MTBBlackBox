@@ -218,6 +218,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             myfile << (static_cast<float>(aaWorld.x) / 4096) << "," << (static_cast<float>(aaWorld.y) / 4096) << "," << (static_cast<float>(aaWorld.z) / 4096) << ",";
         #endif
 
+        // FIX THIS
         // Get GPS goodies if setup did not fail and we are not waiting for a packet
         // if(!gpsfail && gps_rec.waiting(1000000)){
         //
