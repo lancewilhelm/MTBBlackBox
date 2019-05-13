@@ -139,14 +139,6 @@ void setup() {
         printf("DMP Initialization failed (code %d)\n", devStatus);
     }
 
-    // Initialize GPS
-    gpsmm gps_rec("localhost", DEFAULT_GPSD_PORT);
-
-    if (gps_rec.stream(WATCH_ENABLE | WATCH_JSON) == NULL) {
-      std::cerr << "No GPSD running.\n";
-      gpsfail = true;
-    }
-
 }
 
 
@@ -154,7 +146,7 @@ void setup() {
 // ===                    MAIN PROGRAM LOOP                     ===
 // ================================================================
 
-void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_resolution_clock::time_point &t1) {
+void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_resolution_clock::time_point &t1, gpsmm &gps_rec) {
     // if programming failed, don't try to do anything
     if (!dmpReady) return;
 
@@ -275,7 +267,7 @@ int main() {
     std::chrono::time_point<std::chrono::high_resolution_clock> t0, t1;
     t0 = std::chrono::high_resolution_clock::now();
 
-    // Initialize file for recording, write the first row of it for a header
+    // Initialize file for recording
     std::ofstream myfile;
 
     // Open the file
@@ -286,9 +278,17 @@ int main() {
     myfile.open (filename);
     myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt\n";
 
+    // Initialize GPS
+    gpsmm gps_rec("localhost", DEFAULT_GPSD_PORT);
+
+    if (gps_rec.stream(WATCH_ENABLE | WATCH_JSON) == NULL) {
+      std::cerr << "No GPSD running.\n";
+      gpsfail = true;
+    }
+
     for (;;){
       // Run the main loop
-      loop(myfile, t0, t1);
+      loop(myfile, t0, t1, gps_rec);
 
       // Check for button press. Exit loop if pressed
       if(digitalRead(BUTTON) == HIGH){
