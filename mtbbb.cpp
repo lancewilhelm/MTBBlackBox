@@ -222,17 +222,17 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         // Get GPS goodies if setup did not fail and we are not waiting for a packet
         if(!gpsfail && gps_rec.waiting(1000000)){
         //
-        //   // create a structure for the data
-        //   struct gps_data_t *gpsd_data;
+          // create a structure for the data
+          struct gps_data_t *gpsd_data;
         //
-        //   if ((gpsd_data = gps_rec.read()) == NULL) {
-        //     std::cerr << "GPSD read error.\n";
-        //     gpsfail = true;
-        //   } else {
+          if ((gpsd_data = gps_rec.read()) == NULL) {
+            std::cerr << "GPSD read error.\n";
+            gpsfail = true;
+          } else {
         //     if (((gpsd_data = gps_rec.read()) == NULL) ||
         //            (gpsd_data->fix.mode < MODE_2D)) {
         //       return;
-        //     }
+            // }
         //
         //     timestamp_t ts { gpsd_data->fix.time };
         //     auto latitude  { gpsd_data->fix.latitude };
@@ -253,7 +253,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         //     std::cout.setf(std::ios::fixed, std::ios::floatfield);
         //     std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
         //     std::cout << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << std::endl;
-        //   }
+          }
         }
     }
 }
