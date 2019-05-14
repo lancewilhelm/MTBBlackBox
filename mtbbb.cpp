@@ -221,7 +221,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         // FIX THIS
         // Get GPS goodies if setup did not fail and we are not waiting for a packet
         if(!gpsfail && gps_rec.waiting(1000000)){
-          std::cout << "GPS READY" << std::endl;
+          // std::cout << "GPS READY" << std::endl;
         //
           // create a structure for the data
           // struct gps_data_t *gpsd_data;
