@@ -259,6 +259,13 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           }
         } else {
           if(gpsd_data != NULL){
+
+            timestamp_t ts { gpsd_data->fix.time };
+            auto latitude  { gpsd_data->fix.latitude };
+            auto longitude { gpsd_data->fix.longitude };
+            auto speed     { gpsd_data->fix.speed * MPS_TO_MPH};
+            auto alt       { gpsd_data->fix.altitude * METERS_TO_FEET};
+
             std::cout << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << "\n";
           }
         }
