@@ -141,6 +141,47 @@ void setup() {
 
 }
 
+gps_data_t gps_getData (gpsm &rps_rec, gps_data_t &gpsd_data) {
+
+  // Read the GPS data and error check at the same time
+  if ((gpsd_data = gps_rec.read()) == NULL) {
+    std::cerr << "GPSD READ ERROR.\n";
+    gpsfail = true;
+    return;
+  } else {
+    if ((gpsd_data->fix.mode < MODE_2D)) {
+      std::cout << "RETURNING DUE TO FIX MODE ERR" << std::endl;
+      return;
+    }
+
+  // If no errors, then return the GPS data that was read
+  return gpsd_data;
+
+}
+
+void gps_writeData (gps_data_t  &gpsd_data, std::ofstream &myfile){
+
+  timestamp_t ts { gpsd_data->fix.time };
+  auto latitude  { gpsd_data->fix.latitude };
+  auto longitude { gpsd_data->fix.longitude };
+  auto speed     { gpsd_data->fix.speed * MPS_TO_MPH};
+  auto alt       { gpsd_data->fix.altitude * METERS_TO_FEET};
+
+  // convert GPSD's timestamp_t into time_t
+  time_t seconds { (time_t)ts };
+  auto   tm = *std::localtime(&seconds);
+
+  std::ostringstream oss;
+  oss << std::put_time(&tm, "%d-%m-%Y %H:%M:%S");
+  auto time_str { oss.str() };
+
+  // set decimal precision
+  std::setprecision(6);
+  std::cout.setf(std::ios::fixed, std::ios::floatfield);
+  std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
+  myfile << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << std::endl;
+
+}
 
 // ================================================================
 // ===                    MAIN PROGRAM LOOP                     ===
@@ -226,62 +267,13 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         if(!gpsfail && gps_rec.waiting(1000)){
           std::cout << "GPS READY" << std::endl;
 
-          if ((gpsd_data = gps_rec.read()) == NULL) {
-            std::cerr << "GPSD READ ERROR.\n";
-            gpsfail = true;
-          } else {
-            if ((gpsd_data->fix.mode < MODE_2D)) {
-              std::cout << "RETURNING DUE TO FIX MODE ERR" << std::endl;
-              return;
-            }
+          // local function that reads the GPS data
+          gps_getData(gps_rec, gpsd_data);
 
-            std::cout << "GETTING GPS DATA" << std::endl;
+          // Write the GPS data to screen and file
+          std::cout << "WRITING GPS DATA" << std::endl;
+          gps_writeData(gps_data, myfile);
 
-            timestamp_t ts { gpsd_data->fix.time };
-            auto latitude  { gpsd_data->fix.latitude };
-            auto longitude { gpsd_data->fix.longitude };
-            auto speed     { gpsd_data->fix.speed * MPS_TO_MPH};
-            auto alt       { gpsd_data->fix.altitude * METERS_TO_FEET};
-
-            // convert GPSD's timestamp_t into time_t
-            time_t seconds { (time_t)ts };
-            auto   tm = *std::localtime(&seconds);
-
-            std::ostringstream oss;
-            oss << std::put_time(&tm, "%d-%m-%Y %H:%M:%S");
-            auto time_str { oss.str() };
-
-            // set decimal precision
-            std::setprecision(6);
-            std::cout.setf(std::ios::fixed, std::ios::floatfield);
-            std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
-            myfile << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << std::endl;
-          }
-        } else {
-          if(gpsd_data != NULL){
-
-            timestamp_t ts { gpsd_data->fix.time };
-            auto latitude  { gpsd_data->fix.latitude };
-            auto longitude { gpsd_data->fix.longitude };
-            auto speed     { gpsd_data->fix.speed * MPS_TO_MPH};
-            auto alt       { gpsd_data->fix.altitude * METERS_TO_FEET};
-
-            // convert GPSD's timestamp_t into time_t
-            time_t seconds { (time_t)ts };
-            auto   tm = *std::localtime(&seconds);
-
-            std::ostringstream oss;
-            oss << std::put_time(&tm, "%d-%m-%Y %H:%M:%S");
-            auto time_str { oss.str() };
-
-            // set decimal precision
-            std::setprecision(6);
-            std::cout.setf(std::ios::fixed, std::ios::floatfield);
-
-            myfile << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << std::endl;
-          } else {
-            std::cout << std::endl;
-          }
         }
     }
 }
