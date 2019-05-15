@@ -141,30 +141,6 @@ void setup() {
 
 }
 
-void gps_writeData (gps_data_t *gpsd_data, std::ofstream &myfile) {
-
-  timestamp_t ts { gpsd_data->fix.time };
-  auto latitude  { gpsd_data->fix.latitude };
-  auto longitude { gpsd_data->fix.longitude };
-  auto speed     { gpsd_data->fix.speed * MPS_TO_MPH};
-  auto alt       { gpsd_data->fix.altitude * METERS_TO_FEET};
-
-  // convert GPSD's timestamp_t into time_t
-  time_t seconds { (time_t)ts };
-  auto   tm = *std::localtime(&seconds);
-
-  std::ostringstream oss;
-  oss << std::put_time(&tm, "%d-%m-%Y %H:%M:%S");
-  auto time_str { oss.str() };
-
-  // set decimal precision
-  std::setprecision(6);
-  std::cout.setf(std::ios::fixed, std::ios::floatfield);
-  std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
-  myfile << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << std::endl;
-
-}
-
 // ================================================================
 // ===                    MAIN PROGRAM LOOP                     ===
 // ================================================================
@@ -175,6 +151,24 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 
     // create a structure for the data
     struct gps_data_t *gpsd_data;
+
+    // Get GPS goodies if setup did not fail and we are not waiting for a packet
+    if(!gpsfail && gps_rec.waiting(1000)){
+      std::cout << "GPS READY" << std::endl;
+
+      // Read the GPS data and error check at the same time
+      if ((gpsd_data = gps_rec.read()) == NULL) {
+        std::cerr << "GPSD READ ERROR.\n";
+        gpsfail = true;
+      } else if ((gpsd_data->fix.mode < MODE_2D)) {
+          std::cout << "RETURNING DUE TO FIX MODE ERR" << std::endl;
+      }
+
+      // Write the GPS data to screen and file
+      std::cout << "WRITING GPS DATA" << std::endl;
+      gps_writeData(gpsd_data, myfile);
+
+    }
 
     // get current FIFO count
     fifoCount = mpu.getFIFOCount();
@@ -188,7 +182,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         digitalWrite(GREEN, HIGH);
 
     // otherwise, check for DMP data ready interrupt (this should happen frequently)
-  } else if (fifoCount >= 42) {
+  } else if (fifoCount >= 42 && gpsd_data != NULL) {
         // read a packet from FIFO
         mpu.getFIFOBytes(fifoBuffer, packetSize);
 
@@ -244,24 +238,27 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             myfile << (static_cast<float>(aaWorld.x) / 4096) << "," << (static_cast<float>(aaWorld.y) / 4096) << "," << (static_cast<float>(aaWorld.z) / 4096) << ",";
         #endif
 
-        // FIX THIS
-        // Get GPS goodies if setup did not fail and we are not waiting for a packet
-        if(!gpsfail && gps_rec.waiting(1000)){
-          std::cout << "GPS READY" << std::endl;
+        // Display and wriet the GPS data
+        timestamp_t ts { gpsd_data->fix.time };
+        auto latitude  { gpsd_data->fix.latitude };
+        auto longitude { gpsd_data->fix.longitude };
+        auto speed     { gpsd_data->fix.speed * MPS_TO_MPH};
+        auto alt       { gpsd_data->fix.altitude * METERS_TO_FEET};
 
-          // Read the GPS data and error check at the same time
-          if ((gpsd_data = gps_rec.read()) == NULL) {
-            std::cerr << "GPSD READ ERROR.\n";
-            gpsfail = true;
-          } else if ((gpsd_data->fix.mode < MODE_2D)) {
-              std::cout << "RETURNING DUE TO FIX MODE ERR" << std::endl;
-          }
+        // convert GPSD's timestamp_t into time_t
+        time_t seconds { (time_t)ts };
+        auto   tm = *std::localtime(&seconds);
 
-          // Write the GPS data to screen and file
-          std::cout << "WRITING GPS DATA" << std::endl;
-          gps_writeData(gpsd_data, myfile);
+        std::ostringstream oss;
+        oss << std::put_time(&tm, "%d-%m-%Y %H:%M:%S");
+        auto time_str { oss.str() };
 
-        }
+        // set decimal precision
+        std::setprecision(6);
+        std::cout.setf(std::ios::fixed, std::ios::floatfield);
+        std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
+        myfile << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << std::endl;
+
     }
 }
 
