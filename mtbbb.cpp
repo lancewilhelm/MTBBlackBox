@@ -227,7 +227,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           struct gps_data_t *gpsd_data;
 
           if ((gpsd_data = gps_rec.read()) == NULL) {
-            std::cerr << "GPSD read error.\n";
+            std::cerr << "GPSD READ ERROR.\n";
             gpsfail = true;
           } else {
             if ((gpsd_data->fix.mode < MODE_2D)) {
@@ -240,8 +240,8 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             timestamp_t ts { gpsd_data->fix.time };
             auto latitude  { gpsd_data->fix.latitude };
             auto longitude { gpsd_data->fix.longitude };
-            auto speed     { gpsd_data->fix.speed };
-            auto alt       { gpsd_data->fix.altitude };
+            auto speed     { gpsd_data->fix.speed * MPS_TO_MPH};
+            auto alt       { gpsd_data->fix.altitude * METERS_TO_FEET};
 
             // convert GPSD's timestamp_t into time_t
             time_t seconds { (time_t)ts };
