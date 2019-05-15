@@ -279,6 +279,8 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             std::cout.setf(std::ios::fixed, std::ios::floatfield);
 
             myfile << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << std::endl;
+          } else {
+            std::cout << std::endl;
           }
         }
     }
