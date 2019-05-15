@@ -141,21 +141,6 @@ void setup() {
 
 }
 
-gps_data_t gps_getData (gpsmm &gps_rec, gps_data_t *gpsd_data) {
-
-  // Read the GPS data and error check at the same time
-  if ((gpsd_data = gps_rec.read()) == NULL) {
-    std::cerr << "GPSD READ ERROR.\n";
-    gpsfail = true;
-  } else if ((gpsd_data->fix.mode < MODE_2D)) {
-      std::cout << "RETURNING DUE TO FIX MODE ERR" << std::endl;
-  } else {
-    // If no errors, then return the GPS data that was read
-    return *gpsd_data;
-  }
-
-}
-
 void gps_writeData (gps_data_t *gpsd_data, std::ofstream &myfile) {
 
   timestamp_t ts { gpsd_data->fix.time };
@@ -264,8 +249,13 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         if(!gpsfail && gps_rec.waiting(1000)){
           std::cout << "GPS READY" << std::endl;
 
-          // local function that reads the GPS data
-          gps_getData(gps_rec, gpsd_data);
+          // Read the GPS data and error check at the same time
+          if ((gpsd_data = gps_rec.read()) == NULL) {
+            std::cerr << "GPSD READ ERROR.\n";
+            gpsfail = true;
+          } else if ((gpsd_data->fix.mode < MODE_2D)) {
+              std::cout << "RETURNING DUE TO FIX MODE ERR" << std::endl;
+          }
 
           // Write the GPS data to screen and file
           std::cout << "WRITING GPS DATA" << std::endl;
