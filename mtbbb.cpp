@@ -141,7 +141,7 @@ void setup() {
 
 }
 
-gps_data_t gps_getData (gpsmm &gps_rec, gps_data_t &gpsd_data) {
+gps_data_t gps_getData (gpsmm &gps_rec, gps_data_t *gpsd_data) {
 
   // Read the GPS data and error check at the same time
   if ((gpsd_data = gps_rec.read()) == NULL) {
@@ -159,7 +159,7 @@ gps_data_t gps_getData (gpsmm &gps_rec, gps_data_t &gpsd_data) {
 
 }
 
-void gps_writeData (gps_data_t  &gpsd_data, std::ofstream &myfile){
+void gps_writeData (gps_data_t  *gpsd_data, std::ofstream &myfile){
 
   timestamp_t ts { gpsd_data->fix.time };
   auto latitude  { gpsd_data->fix.latitude };
