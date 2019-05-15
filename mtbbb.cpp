@@ -141,7 +141,7 @@ void setup() {
 
 }
 
-gps_data_t gps_getData (gpsmm &rps_rec, gps_data_t &gpsd_data) {
+gps_data_t gps_getData (gpsmm &gps_rec, gps_data_t &gpsd_data) {
 
   // Read the GPS data and error check at the same time
   if ((gpsd_data = gps_rec.read()) == NULL) {
