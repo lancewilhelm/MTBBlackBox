@@ -162,7 +162,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         digitalWrite(GREEN, HIGH);
 
     // otherwise, check for DMP data ready interrupt (this should happen frequently)
-    } else if (fifoCount >= 42) {
+  } else if (fifoCount >= 42) {
         // read a packet from FIFO
         mpu.getFIFOBytes(fifoBuffer, packetSize);
 
@@ -255,7 +255,11 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             std::setprecision(6);
             std::cout.setf(std::ios::fixed, std::ios::floatfield);
             std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
-            std::cout << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << std::endl;
+            std::cout << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << "\n";
+          }
+        } else {
+          if(gpsd_data != NULL){
+            std::cout << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << "\n";
           }
         }
     }
