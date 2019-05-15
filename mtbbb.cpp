@@ -150,11 +150,11 @@ gps_data_t gps_getData (gpsmm &gps_rec, gps_data_t *gpsd_data) {
   } else {
     if ((gpsd_data->fix.mode < MODE_2D)) {
       std::cout << "RETURNING DUE TO FIX MODE ERR" << std::endl;
-      return gpsd_data;
+      return &gpsd_data;
     }
 
   // If no errors, then return the GPS data that was read
-  return gpsd_data;
+  return &gpsd_data;
 
 }
 
