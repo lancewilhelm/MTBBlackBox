@@ -156,7 +156,7 @@ gps_data_t gps_getData (gpsmm &gps_rec, gps_data_t *gpsd_data) {
 
 }
 
-void gps_writeData (gps_data_t  *gpsd_data, std::ofstream &myfile) {
+void gps_writeData (gps_data_t *gpsd_data, std::ofstream &myfile) {
 
   timestamp_t ts { gpsd_data->fix.time };
   auto latitude  { gpsd_data->fix.latitude };
@@ -269,7 +269,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 
           // Write the GPS data to screen and file
           std::cout << "WRITING GPS DATA" << std::endl;
-          gps_writeData(gps_data, myfile);
+          gps_writeData(gpsd_data, myfile);
 
         }
     }
