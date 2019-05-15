@@ -230,10 +230,8 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             std::cerr << "GPSD read error.\n";
             gpsfail = true;
           } else {
-            if (((gpsd_data = gps_rec.read()) == NULL) ||
-                   (gpsd_data->fix.mode < MODE_2D)) {
-              std::cout << gpsd_data->fix.mode << std::endl;
-              std::cout << "RETURNING" << std::endl;
+            if ((gpsd_data->fix.mode < MODE_2D)) {
+              std::cout << "RETURNING DUE TO FIX MODE ERR" << std::endl;
               return;
             }
 
