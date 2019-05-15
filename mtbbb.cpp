@@ -155,7 +155,6 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
     // Get GPS goodies if setup did not fail and we are not waiting for a packet
     if(!gpsfail && gps_rec.waiting(1000)){
       std::cout << "GPS READY" << std::endl;
-
       // Read the GPS data and error check at the same time
       if ((gpsd_data = gps_rec.read()) == NULL) {
         std::cerr << "GPSD READ ERROR.\n";
