@@ -232,12 +232,13 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           } else {
             if (((gpsd_data = gps_rec.read()) == NULL) ||
                    (gpsd_data->fix.mode < MODE_2D)) {
+              std::cout << gpsd_data->fix.mode << std::endl;
               std::cout << "RETURNING" << std::endl;
               return;
             }
 
             std::cout << "GETTING GPS DATA" << std::endl;
-            
+
             timestamp_t ts { gpsd_data->fix.time };
             auto latitude  { gpsd_data->fix.latitude };
             auto longitude { gpsd_data->fix.longitude };
