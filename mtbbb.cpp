@@ -163,11 +163,6 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
       } else if ((gpsd_data->fix.mode < MODE_2D)) {
           std::cout << "RETURNING DUE TO FIX MODE ERR" << std::endl;
       }
-
-      // Write the GPS data to screen and file
-      std::cout << "WRITING GPS DATA" << std::endl;
-      gps_writeData(gpsd_data, myfile);
-
     }
 
     // get current FIFO count
