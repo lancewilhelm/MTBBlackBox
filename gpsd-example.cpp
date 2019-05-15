@@ -55,7 +55,11 @@ int main()
       // set decimal precision
       std::cout.precision(6);
       std::cout.setf(std::ios::fixed, std::ios::floatfield);
-      std::cout << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
+      if(seconds == 0){
+        std::cout << "," << "," << "," << "," << std::endl;
+      } else {
+        std::cout << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
+      }
     }
   }
   return 0;
