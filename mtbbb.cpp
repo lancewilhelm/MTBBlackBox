@@ -147,18 +147,16 @@ gps_data_t gps_getData (gpsmm &gps_rec, gps_data_t *gpsd_data) {
   if ((gpsd_data = gps_rec.read()) == NULL) {
     std::cerr << "GPSD READ ERROR.\n";
     gpsfail = true;
-  } else {
-    if ((gpsd_data->fix.mode < MODE_2D)) {
+  } else if ((gpsd_data->fix.mode < MODE_2D)) {
       std::cout << "RETURNING DUE TO FIX MODE ERR" << std::endl;
-      return *gpsd_data;
-    }
-
-  // If no errors, then return the GPS data that was read
-  return *gpsd_data;
+  } else {
+    // If no errors, then return the GPS data that was read
+    return *gpsd_data;
+  }
 
 }
 
-void gps_writeData (gps_data_t  *gpsd_data, std::ofstream &myfile){
+void gps_writeData (gps_data_t  *gpsd_data, std::ofstream &myfile) {
 
   timestamp_t ts { gpsd_data->fix.time };
   auto latitude  { gpsd_data->fix.latitude };
