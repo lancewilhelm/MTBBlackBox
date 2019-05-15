@@ -150,6 +150,9 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
     // if programming failed, don't try to do anything
     if (!dmpReady) return;
 
+    // create a structure for the data
+    struct gps_data_t *gpsd_data;
+
     // get current FIFO count
     fifoCount = mpu.getFIFOCount();
 
@@ -222,9 +225,6 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         // Get GPS goodies if setup did not fail and we are not waiting for a packet
         if(!gpsfail && gps_rec.waiting(1000)){
           std::cout << "GPS READY" << std::endl;
-
-          // create a structure for the data
-          struct gps_data_t *gpsd_data;
 
           if ((gpsd_data = gps_rec.read()) == NULL) {
             std::cerr << "GPSD READ ERROR.\n";
