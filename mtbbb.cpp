@@ -72,6 +72,8 @@ float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gra
 
 bool gpsfail = false;
 
+int fifoOverflow = 0;
+
 // Define for the LEDS
 #define GREEN 0
 #define RED 1
@@ -171,6 +173,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         // reset so we can continue cleanly
         mpu.resetFIFO();
         printf("FIFO overflow!\n");
+        fifoOverflow = 1;
 
         digitalWrite(RED, HIGH);
         digitalWrite(GREEN, HIGH);
@@ -252,12 +255,15 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         std::cout.setf(std::ios::fixed, std::ios::floatfield);
         std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
         if(seconds == 0){
-          myfile << "," << "," << "," << "," << std::endl;
+          myfile << "," << "," << "," << ","; // << std::endl;
           digitalWrite(RED, HIGH);
           digitalWrite(GREEN, HIGH);
         } else {
-          myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << std::endl;
+          myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt; // << std::endl;
         }
+
+        myfile << fifoOverflow << std::endl;
+        fifoOverflow = 0;
     }
 }
 
@@ -279,7 +285,7 @@ int main() {
     os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
     std::string filename = os.str();
     myfile.open (filename);
-    myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt\n";
+    myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt,overflow\n";
 
     // Initialize GPS
     gpsmm gps_rec("localhost", DEFAULT_GPSD_PORT);
