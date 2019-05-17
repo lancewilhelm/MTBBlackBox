@@ -255,11 +255,11 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         std::cout.setf(std::ios::fixed, std::ios::floatfield);
         std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
         if(seconds == 0){
-          myfile << "," << "," << "," << ","; // << std::endl;
+          myfile << "," << "," << "," << "," << ","; // << std::endl;
           digitalWrite(RED, HIGH);
           digitalWrite(GREEN, HIGH);
         } else {
-          myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt; // << std::endl;
+          myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << ","; // << std::endl;
         }
 
         myfile << fifoOverflow << std::endl;
