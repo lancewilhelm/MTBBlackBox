@@ -241,6 +241,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           digitalWrite(GREEN, HIGH);
         } else {
           myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << ","; // << std::endl;
+          newGPSData = false;
         }
 
         myfile << fifoOverflow << std::endl;
