@@ -71,6 +71,8 @@ float euler[3];         // [psi, theta, phi]    Euler angle container
 float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
 
 bool gpsfail = false;
+bool newGPSData = false;
+int fifoOverflow = 0;
 
 // Define for the LEDS
 #define GREEN 0
@@ -153,8 +155,9 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
     struct gps_data_t *gpsd_data;
 
     // Get GPS goodies if setup did not fail and we are not waiting for a packet
-    if(!gpsfail && gps_rec.waiting(1000)){
+    if(!gpsfail && gps_rec.waiting(100)){
       std::cout << "GPS READY" << std::endl;
+      newGPSData = true;
       // Read the GPS data and error check at the same time
       if ((gpsd_data = gps_rec.read()) == NULL) {
         std::cerr << "GPSD READ ERROR.\n";
@@ -166,6 +169,9 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 
     // get current FIFO count
     fifoCount = mpu.getFIFOCount();
+
+    // debugging
+    fifoOverflow = fifoCount;
 
     if (fifoCount == 1024) {
         // reset so we can continue cleanly
@@ -179,6 +185,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
   } else if (fifoCount >= 42 && gpsd_data != NULL) {
         // read a packet from FIFO
         mpu.getFIFOBytes(fifoBuffer, packetSize);
+        //mpu.resetFIFO();
 
         digitalWrite(RED, LOW);
         digitalWrite(GREEN, HIGH);
@@ -188,49 +195,26 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         std::chrono::duration<double> duration = t1 - t0;
         myfile << std::setprecision(6) << duration.count() << ",";
 
-        // Start going down and displaying data
-        #ifdef OUTPUT_READABLE_QUATERNION
-            // display quaternion values in easy matrix form: w x y z
-            mpu.dmpGetQuaternion(&q, fifoBuffer);
-            printf("quat %7.2f %7.2f %7.2f %7.2f    ", q.w,q.x,q.y,q.z);
-        #endif
+        // Gather data from dmp
+        mpu.dmpGetQuaternion(&q, fifoBuffer);
+        mpu.dmpGetAccel(&aa, fifoBuffer);
+        mpu.dmpGetGravity(&gravity, &q);
+        mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+        mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
+        mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
 
-        #ifdef OUTPUT_READABLE_EULER
-            // display Euler angles in degrees
-            mpu.dmpGetQuaternion(&q, fifoBuffer);
-            mpu.dmpGetEuler(euler, &q);
-            printf("euler %7.2f %7.2f %7.2f    ", euler[0] * 180/M_PI, euler[1] * 180/M_PI, euler[2] * 180/M_PI);
-        #endif
+        // Yaw Pitch Roll
+        printf("ypr  %7.2f %7.2f %7.2f    ", ypr[0] * 180/M_PI, ypr[1] * 180/M_PI, ypr[2] * 180/M_PI);
+        myfile << std::fixed << std::setprecision(2) << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << ",";
 
-        #ifdef OUTPUT_READABLE_YAWPITCHROLL
-            // display Euler angles in degrees
-            mpu.dmpGetQuaternion(&q, fifoBuffer);
-            mpu.dmpGetGravity(&gravity, &q);
-            mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-            printf("ypr  %7.2f %7.2f %7.2f    ", ypr[0] * 180/M_PI, ypr[1] * 180/M_PI, ypr[2] * 180/M_PI);
-            myfile << std::fixed << std::setprecision(2) << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << ",";
-        #endif
+        // display real acceleration, adjusted to remove gravity
+        printf("areal %6d %6d %6d    ", (static_cast<float>(aaReal.x) / 4096), (static_cast<float>(aaReal.y) / 4096), (static_cast<float>(aaReal.z) / 4096));
+        myfile << (static_cast<float>(aaReal.x) / 4096) << "," << (static_cast<float>(aaReal.y) / 4096) << "," << (static_cast<float>(aaReal.z) / 4096) << ",";
 
-        #ifdef OUTPUT_READABLE_REALACCEL
-            // display real acceleration, adjusted to remove gravity
-            mpu.dmpGetQuaternion(&q, fifoBuffer);
-            mpu.dmpGetAccel(&aa, fifoBuffer);
-            mpu.dmpGetGravity(&gravity, &q);
-            mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-            printf("areal %6d %6d %6d    ", (static_cast<float>(aaReal.x) / 4096), (static_cast<float>(aaReal.y) / 4096), (static_cast<float>(aaReal.z) / 4096));
-            myfile << (static_cast<float>(aaReal.x) / 4096) << "," << (static_cast<float>(aaReal.y) / 4096) << "," << (static_cast<float>(aaReal.z) / 4096) << ",";
-        #endif
-
-        #ifdef OUTPUT_READABLE_WORLDACCEL
-            // display initial world-frame acceleration, adjusted to remove gravity
-            // and rotated based on known orientation from quaternion
-            mpu.dmpGetQuaternion(&q, fifoBuffer);
-            mpu.dmpGetAccel(&aa, fifoBuffer);
-            mpu.dmpGetGravity(&gravity, &q);
-            mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-            printf("aworld %6d %6d %6d \n", (static_cast<float>(aaWorld.x) / 4096), (static_cast<float>(aaWorld.y) / 4096), (static_cast<float>(aaWorld.z) / 4096));
-            myfile << (static_cast<float>(aaWorld.x) / 4096) << "," << (static_cast<float>(aaWorld.y) / 4096) << "," << (static_cast<float>(aaWorld.z) / 4096) << ",";
-        #endif
+        // display initial world-frame acceleration, adjusted to remove gravity
+        // and rotated based on known orientation from quaternion
+        printf("aworld %6d %6d %6d \n", (static_cast<float>(aaWorld.x) / 4096), (static_cast<float>(aaWorld.y) / 4096), (static_cast<float>(aaWorld.z) / 4096));
+        myfile << (static_cast<float>(aaWorld.x) / 4096) << "," << (static_cast<float>(aaWorld.y) / 4096) << "," << (static_cast<float>(aaWorld.z) / 4096) << ",";
 
         // Display and wriet the GPS data
         timestamp_t ts { gpsd_data->fix.time };
@@ -247,17 +231,20 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         oss << std::put_time(&tm, "%d-%m-%Y %H:%M:%S");
         auto time_str { oss.str() };
 
-        // set decimal precision
+        // ouput GPS data
         std::setprecision(6);
         std::cout.setf(std::ios::fixed, std::ios::floatfield);
-        std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
-        if(seconds == 0){
-          myfile << "," << "," << "," << "," << std::endl;
+        //std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
+        if(seconds == 0 || newGPSData == false){
+          myfile << "," << "," << "," << "," << ","; // << std::endl;
           digitalWrite(RED, HIGH);
           digitalWrite(GREEN, HIGH);
         } else {
-          myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << std::endl;
+          myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << ","; // << std::endl;
+          newGPSData = false;
         }
+
+        myfile << fifoOverflow << std::endl;
     }
 }
 
@@ -279,7 +266,7 @@ int main() {
     os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
     std::string filename = os.str();
     myfile.open (filename);
-    myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt\n";
+    myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt,overflow\n";
 
     // Initialize GPS
     gpsmm gps_rec("localhost", DEFAULT_GPSD_PORT);
