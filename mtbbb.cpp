@@ -168,12 +168,12 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 
     // get current FIFO count
     fifoCount = mpu.getFIFOCount();
+    fifoOverflow = fifoCount;
 
     if (fifoCount == 1024) {
         // reset so we can continue cleanly
         mpu.resetFIFO();
         printf("FIFO overflow!\n");
-        fifoOverflow = 1;
 
         digitalWrite(RED, HIGH);
         digitalWrite(GREEN, HIGH);
@@ -183,7 +183,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         // read a packet from FIFO
         mpu.getFIFOBytes(fifoBuffer, packetSize);
         mpu.resetFIFO();
-        
+
         digitalWrite(RED, LOW);
         digitalWrite(GREEN, HIGH);
 
