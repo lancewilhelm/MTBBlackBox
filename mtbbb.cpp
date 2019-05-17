@@ -15,6 +15,7 @@
 #include <libgpsmm.h>
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
+#include "ssd1306_i2c.h"
 
 // class default I2C address is 0x68
 // specific I2C addresses may be passed as a parameter here
@@ -83,7 +84,19 @@ int fifoOverflow = 0;
 // ===                      INITIAL SETUP                       ===
 // ================================================================
 
+void printOLED(std::string text, bool clearScreen = false){
+  if(clearScreen){
+    ssd1306_clearDisplay();
+  }
+  ssd1306_drawString(text);
+  ssd1306_display();
+}
+
 void setup() {
+
+    // Boot up screen
+    ssd1306_begin(SSD1306_SWITCHCAPVCC, SSD1306_I2C_ADDRESS);
+    printOLED("  Initializing....", false);
 
     // Setup the GPIO stuff for the LEDs and buttons
     printf("Initializing wiringPi...\n");
