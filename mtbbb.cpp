@@ -2,6 +2,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <sstream>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -11,6 +12,7 @@
 #include <chrono>
 #include <ctime>
 #include <wiringPi.h>
+#include <libgpsmm.h>
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
 
@@ -67,6 +69,8 @@ VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measure
 VectorFloat gravity;    // [x, y, z]            gravity vector
 float euler[3];         // [psi, theta, phi]    Euler angle container
 float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+
+bool gpsfail = false;
 
 // Define for the LEDS
 #define GREEN 0
@@ -134,17 +138,31 @@ void setup() {
         // (if it's going to break, usually the code will be 1)
         printf("DMP Initialization failed (code %d)\n", devStatus);
     }
-}
 
+}
 
 // ================================================================
 // ===                    MAIN PROGRAM LOOP                     ===
 // ================================================================
 
-void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_resolution_clock::time_point &t1) {
+void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_resolution_clock::time_point &t1, gpsmm &gps_rec) {
     // if programming failed, don't try to do anything
     if (!dmpReady) return;
 
+    // create a structure for the data
+    struct gps_data_t *gpsd_data;
+
+    // Get GPS goodies if setup did not fail and we are not waiting for a packet
+    if(!gpsfail && gps_rec.waiting(1000)){
+      std::cout << "GPS READY" << std::endl;
+      // Read the GPS data and error check at the same time
+      if ((gpsd_data = gps_rec.read()) == NULL) {
+        std::cerr << "GPSD READ ERROR.\n";
+        gpsfail = true;
+      } else if ((gpsd_data->fix.mode < MODE_2D)) {
+          std::cout << "RETURNING DUE TO FIX MODE ERR" << std::endl;
+      }
+    }
 
     // get current FIFO count
     fifoCount = mpu.getFIFOCount();
@@ -158,7 +176,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         digitalWrite(GREEN, HIGH);
 
     // otherwise, check for DMP data ready interrupt (this should happen frequently)
-    } else if (fifoCount >= 42) {
+  } else if (fifoCount >= 42 && gpsd_data != NULL) {
         // read a packet from FIFO
         mpu.getFIFOBytes(fifoBuffer, packetSize);
 
@@ -210,12 +228,36 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             mpu.dmpGetAccel(&aa, fifoBuffer);
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-            printf("aworld %6d %6d %6d    ", (static_cast<float>(aaWorld.x) / 4096), (static_cast<float>(aaWorld.y) / 4096), (static_cast<float>(aaWorld.z) / 4096));
-            myfile << (static_cast<float>(aaWorld.x) / 4096) << "," << (static_cast<float>(aaWorld.y) / 4096) << "," << (static_cast<float>(aaWorld.z) / 4096);
+            printf("aworld %6d %6d %6d \n", (static_cast<float>(aaWorld.x) / 4096), (static_cast<float>(aaWorld.y) / 4096), (static_cast<float>(aaWorld.z) / 4096));
+            myfile << (static_cast<float>(aaWorld.x) / 4096) << "," << (static_cast<float>(aaWorld.y) / 4096) << "," << (static_cast<float>(aaWorld.z) / 4096) << ",";
         #endif
 
-        myfile << "\n";
-        printf("\n");
+        // Display and wriet the GPS data
+        timestamp_t ts { gpsd_data->fix.time };
+        auto latitude  { gpsd_data->fix.latitude };
+        auto longitude { gpsd_data->fix.longitude };
+        auto speed     { gpsd_data->fix.speed * MPS_TO_MPH};
+        auto alt       { gpsd_data->fix.altitude * METERS_TO_FEET};
+
+        // convert GPSD's timestamp_t into time_t
+        time_t seconds { (time_t)ts };
+        auto   tm = *std::localtime(&seconds);
+
+        std::ostringstream oss;
+        oss << std::put_time(&tm, "%d-%m-%Y %H:%M:%S");
+        auto time_str { oss.str() };
+
+        // set decimal precision
+        std::setprecision(6);
+        std::cout.setf(std::ios::fixed, std::ios::floatfield);
+        std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
+        if(seconds == 0){
+          myfile << "," << "," << "," << "," << std::endl;
+          digitalWrite(RED, HIGH);
+          digitalWrite(GREEN, HIGH);
+        } else {
+          myfile << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << std::endl;
+        }
     }
 }
 
@@ -228,7 +270,7 @@ int main() {
     std::chrono::time_point<std::chrono::high_resolution_clock> t0, t1;
     t0 = std::chrono::high_resolution_clock::now();
 
-    // Initialize file for recording, write the first row of it for a header
+    // Initialize file for recording
     std::ofstream myfile;
 
     // Open the file
@@ -237,11 +279,19 @@ int main() {
     os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
     std::string filename = os.str();
     myfile.open (filename);
-    myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ\n";
+    myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt\n";
+
+    // Initialize GPS
+    gpsmm gps_rec("localhost", DEFAULT_GPSD_PORT);
+
+    if (gps_rec.stream(WATCH_ENABLE | WATCH_JSON) == NULL) {
+      std::cerr << "No GPSD running.\n";
+      gpsfail = true;
+    }
 
     for (;;){
       // Run the main loop
-      loop(myfile, t0, t1);
+      loop(myfile, t0, t1, gps_rec);
 
       // Check for button press. Exit loop if pressed
       if(digitalRead(BUTTON) == HIGH){
