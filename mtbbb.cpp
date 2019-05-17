@@ -66,7 +66,6 @@ void setup() {
     // Boot up screen
     ssd1306_begin(SSD1306_SWITCHCAPVCC, SSD1306_I2C_ADDRESS);
     printOLED("  Initializing....", false);
-    ssd1306_display();
 
     // Setup the GPIO stuff for the LEDs and buttons
     printf("Initializing wiringPi...\n");
