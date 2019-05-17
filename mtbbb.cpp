@@ -40,9 +40,19 @@ VectorFloat gravity;    // [x, y, z]            gravity vector
 float euler[3];         // [psi, theta, phi]    Euler angle container
 float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
 
+// gps stuff
 bool gpsfail = false;
 bool newGPSData = false;
 int fifoOverflow = 0;
+
+//stuff for screen
+float maxSpeed = 0;
+std::string maxSpeedStr;
+float posMaxG = 0;
+float negMaxG = 0;
+std::string posMaxGStr;
+std::string negMaxGStr;
+bool updateScreen = false;
 
 // Define for the LEDS
 #define GREEN 0
@@ -205,6 +215,14 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         auto speed     { gpsd_data->fix.speed * MPS_TO_MPH};
         auto alt       { gpsd_data->fix.altitude * METERS_TO_FEET};
 
+        // check for new max speed
+        if(speed > maxSpeed){
+          maxSpeed = speed;
+          std::ostringstream stream;
+          stream << std::fixed << std::setprecision(2) << maxSpeed;
+          maxSpeedStr = stream.str();
+        }
+
         // convert GPSD's timestamp_t into time_t
         time_t seconds { (time_t)ts };
         auto   tm = *std::localtime(&seconds);
@@ -212,6 +230,24 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         std::ostringstream oss;
         oss << std::put_time(&tm, "%d-%m-%Y %H:%M:%S");
         auto time_str { oss.str() };
+
+        // If we have received new GPS data, update the screen
+        if(updateScreen){
+
+          // display current GPS state
+          if(seconds == 0){
+            std::string text = "GPS NL";
+            text = text + "      " + oled_time_str;
+            printOLED(text, true);
+          } else {
+            std::string text = "GPS";
+            text = text + "         " + oled_time_str + "\n\nMax Sp: " + maxSpeedStr + "\nAlt: " + std::to_string(static_cast<int>(alt)) + "\nMax G: [" + posMaxGStr + "," + negMaxGStr +"]";
+            printOLED(text, true);
+          }
+
+          // In the end, flip bool
+          updateScreen = false;
+        }
 
         // ouput GPS data
         std::setprecision(6);
@@ -225,6 +261,20 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         }
 
         myfile << fifoOverflow << std::endl;
+
+        // Highest G z world
+        if((static_cast<float>(aaWorld.z) / 4096) > posMaxG){
+          posMaxG = (static_cast<float>(aaWorld.z) / 4096);
+          std::ostringstream stream2;
+          stream2 << std::fixed << std::setprecision(2) << posMaxG;
+          posMaxGStr = stream2.str();
+        } else if((static_cast<float>(aaWorld.z) / 4096) < negMaxG){
+          negMaxG = (static_cast<float>(aaWorld.z) / 4096);
+          std::ostringstream stream3;
+          stream3 << std::fixed << std::setprecision(2) << negMaxG;
+          negMaxGStr = stream3.str();
+        }
+
     }
 }
 
@@ -256,12 +306,18 @@ int main() {
       gpsfail = true;
     }
 
+    // Clear display before starting
+    printOLED("     RUNNING...     ", true);
+
     for (;;){
       // Run the main loop
       loop(myfile, t0, t1, gps_rec);
 
       // Check for button press. Exit loop if pressed
       if(digitalRead(BUTTON) == HIGH){
+
+        printOLED("\n\n\n\n\n\n\n  Ending MTBBB....");
+
         break;
       }
     }
