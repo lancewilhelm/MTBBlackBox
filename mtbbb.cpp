@@ -236,7 +236,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         auto oled_time_str { osss.str() };
 
         // If we have received new GPS data, update the screen
-        if(updateScreen){
+        if(newGPSData){
 
           // display current GPS state
           if(seconds == 0){
