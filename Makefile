@@ -1,7 +1,7 @@
 all: mtbbb
 
-HDRS = helper_3dmath.h I2Cdev.h MPU6050_6Axis_MotionApps20.h MPU6050.h
-CMN_OBJS = I2Cdev.o MPU6050.o
+HDRS = helper_3dmath.h I2Cdev.h MPU6050_6Axis_MotionApps20.h MPU6050.h ssd1306_i2c.h
+CMN_OBJS = I2Cdev.o MPU6050.o ssd1306_i2c.o
 MTBBB_OBJS = mtbbb.o
 CFLAGS = 'pkg-config --cflags libgps'
 LDFLAGS = '$(pkg-config --libs libgps)'
