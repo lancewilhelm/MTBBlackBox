@@ -231,6 +231,10 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         oss << std::put_time(&tm, "%d-%m-%Y %H:%M:%S");
         auto time_str { oss.str() };
 
+        std::ostringstream osss;
+        osss << std::put_time(&tm, "%H:%M:%S");
+        auto oled_time_str { osss.str() };
+
         // If we have received new GPS data, update the screen
         if(updateScreen){
 
