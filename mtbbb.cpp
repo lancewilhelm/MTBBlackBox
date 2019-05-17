@@ -256,7 +256,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           digitalWrite(RED, HIGH);
           digitalWrite(GREEN, HIGH);
         } else {
-          myfile << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << std::endl;
+          myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << std::endl;
         }
     }
 }
