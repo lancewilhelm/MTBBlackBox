@@ -71,7 +71,7 @@ float euler[3];         // [psi, theta, phi]    Euler angle container
 float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
 
 bool gpsfail = false;
-
+bool newGPSData = false;
 int fifoOverflow = 0;
 
 // Define for the LEDS
@@ -157,6 +157,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
     // Get GPS goodies if setup did not fail and we are not waiting for a packet
     if(!gpsfail && gps_rec.waiting(100)){
       std::cout << "GPS READY" << std::endl;
+      newGPSData = true;
       // Read the GPS data and error check at the same time
       if ((gpsd_data = gps_rec.read()) == NULL) {
         std::cerr << "GPSD READ ERROR.\n";
@@ -233,8 +234,8 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         // ouput GPS data
         std::setprecision(6);
         std::cout.setf(std::ios::fixed, std::ios::floatfield);
-        std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
-        if(seconds == 0){
+        //std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
+        if(seconds == 0 || newGPSData == false){
           myfile << "," << "," << "," << "," << ","; // << std::endl;
           digitalWrite(RED, HIGH);
           digitalWrite(GREEN, HIGH);
