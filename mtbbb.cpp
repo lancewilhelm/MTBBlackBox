@@ -182,7 +182,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
   } else if (fifoCount >= 42 && gpsd_data != NULL) {
         // read a packet from FIFO
         mpu.getFIFOBytes(fifoBuffer, packetSize);
-        mpu.resetFIFO();
+        //mpu.resetFIFO();
 
         digitalWrite(RED, LOW);
         digitalWrite(GREEN, HIGH);
