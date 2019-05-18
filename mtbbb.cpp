@@ -121,7 +121,7 @@ void setup() {
         mpuIntStatus = mpu.getIntStatus();
 
         // set our DMP Ready flag so the main loop() function knows it's okay to use it
-        std::cout << "DMP ready!" << std:endl;
+        std::cout << "DMP ready!" << std::endl;
         dmpReady = true;
 
         // get expected DMP packet size for later comparison
