@@ -79,7 +79,7 @@ void setup() {
 
     // Setup the GPIO stuff for the LEDs and buttons
     fflush(stdout);
-    printf("Initializing wiringPi...\n");
+    std::cout << "Initializing wiringPi..." << std::endl;
     wiringPiSetup();
     pinMode(GREEN, OUTPUT);
     pinMode(RED, OUTPUT);
@@ -88,15 +88,15 @@ void setup() {
     digitalWrite(GREEN, LOW);
 
     // initialize device
-    printf("Initializing I2C devices...\n");
+    std::cout << "Initializing I2C devices..." << std::endl;
     mpu.initialize();
 
     // verify connection
-    printf("Testing device connections...\n");
-    printf(mpu.testConnection() ? "MPU6050 connection successful\n" : "MPU6050 connection failed\n");
+    std::cout << "Testing device connections..." << std::endl;
+    std::cout << (mpu.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed") << std::endl;
 
     // load and configure the DMP
-    printf("Initializing DMP...\n");
+    std::cout << "Initializing DMP..." << std::endl;
     devStatus = mpu.dmpInitialize();
 
     mpu.setXAccelOffset(-2081);
@@ -112,7 +112,7 @@ void setup() {
     // make sure it worked (returns 0 if so)
     if (devStatus == 0) {
         // turn on the DMP, now that it's ready
-        printf("Enabling DMP...\n");
+        std::cout << "Enabling DMP..." << std::endl;
         mpu.setDMPEnabled(true);
 
         // enable Arduino interrupt detection
@@ -121,7 +121,7 @@ void setup() {
         mpuIntStatus = mpu.getIntStatus();
 
         // set our DMP Ready flag so the main loop() function knows it's okay to use it
-        printf("DMP ready!\n");
+        std::cout << "DMP ready!" << std:endl;
         dmpReady = true;
 
         // get expected DMP packet size for later comparison
@@ -131,7 +131,7 @@ void setup() {
         // 1 = initial memory load failed
         // 2 = DMP configuration updates failed
         // (if it's going to break, usually the code will be 1)
-        printf("DMP Initialization failed (code %d)\n", devStatus);
+        std::cout << "DMP Initialization failed code: " << devStatus << std::endl;
     }
 
 }
