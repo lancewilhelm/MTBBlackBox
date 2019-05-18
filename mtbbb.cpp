@@ -78,6 +78,7 @@ void setup() {
     printOLED("  Initializing....", false);
 
     std::cout << "Test before printf command" << std::endl;
+    printf("Test printf command\n");
 
     // Setup the GPIO stuff for the LEDs and buttons
     printf("Initializing wiringPi...\n");
