@@ -15,9 +15,10 @@ sudo cp ~/mtbblackbox/setup/modules /etc/
 sudo cp ~/mtbblackbox/setup/config.txt /boot/
 
 # For run from reboot
-sudo rm /var/spool/cron/crontabs/pi
-sudo cp ~/mtbblackbox/setup/crontabScript /var/spool/cron/crontabs/pi
-sudo chmod 600 /var/spool/cron/crontabs/pi
+sudo cp /home/pi/mtbblackbox/bootup.sh /etc/init.d/mtbbb
+sudo chmod +x /etc/init.d/mtbbb
+sudo touch "/var/log/mtbbb.log" && sudo chown "pi" "/var/log/mtbbb.log"
+sudo update-rc.d mtbbb defaults
 
 # For GPS
 # check the booksmarks later and put in here
@@ -25,6 +26,7 @@ sudo apt -y install gpsd gpsd-clients python-gps chrony libgps-dev
 sudo systemctl stop gpsd.socket
 sudo systemctl disable gpsd.socket
 sudo ln -s /lib/systemd/system/gpsd.service /etc/systemd/system/multi-user.target.wants/
+
 
 
 sudo reboot now
