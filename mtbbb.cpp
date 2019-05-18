@@ -239,12 +239,14 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 
           // display current GPS state
           if(seconds == 0){
-            std::string text = "GPS NL";
-            text = text + "      " + oled_time_str;
+            // std::string text = "GPS NL";
+            std::string text = "G";
+            // text = text + "      " + oled_time_str;
             printOLED(text, true);
           } else {
-            std::string text = "GPS";
-            text = text + "         " + oled_time_str + "\n\nMax Sp: " + maxSpeedStr + "\nAlt: " + std::to_string(static_cast<int>(alt)) + "\nMax G: [" + posMaxGStr + "," + negMaxGStr +"]";
+            // std::string text = "GPS";
+            std::string text = "G";
+            // text = text + "         " + oled_time_str + "\n\nMax Sp: " + maxSpeedStr + "\nAlt: " + std::to_string(static_cast<int>(alt)) + "\nMax G: [" + posMaxGStr + "," + negMaxGStr +"]";
             printOLED(text, true);
           }
 
