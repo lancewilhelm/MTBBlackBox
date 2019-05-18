@@ -1,30 +1,68 @@
-#!/bin/bash
+#!/bin/sh
 
 ### BEGIN INIT INFO
 # Provides:          mtbbb
-# Required-Start:    $remote_fs $syslog $time gpsd
-# Required-Stop:     $remote_fs $syslog
+# Required-Start:    $local_fs $network $named $time $syslog
+# Required-Stop:     $local_fs $network $named $time $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: mtbbb service
-# Description:       Run mtbbb service
+# Description:       mtbbb service
 ### END INIT INFO
 
-# Carry out specific functions when asked to by the system
+SCRIPT=/home/pi/mtbblackbox/mtbbb
+RUNAS=pi
+
+PIDFILE=/var/run/mtbbb.pid
+LOGFILE=/var/log/mtbbb.log
+
+start() {
+  if [ -f /var/run/$PIDNAME ] && kill -0 $(cat /var/run/$PIDNAME); then
+    echo 'Service already running' >&2
+    return 1
+  fi
+  echo 'Starting service…' >&2
+  local CMD="$SCRIPT &> \"$LOGFILE\" & echo \$!"
+  su -c "$CMD" $RUNAS > "$PIDFILE"
+  echo 'Service started' >&2
+}
+
+stop() {
+  if [ ! -f "$PIDFILE" ] || ! kill -0 $(cat "$PIDFILE"); then
+    echo 'Service not running' >&2
+    return 1
+  fi
+  echo 'Stopping service…' >&2
+  kill -15 $(cat "$PIDFILE") && rm -f "$PIDFILE"
+  echo 'Service stopped' >&2
+}
+
+uninstall() {
+  echo -n "Are you really sure you want to uninstall this service? That cannot be undone. [yes|No] "
+  local SURE
+  read SURE
+  if [ "$SURE" = "yes" ]; then
+    stop
+    rm -f "$PIDFILE"
+    echo "Notice: log file is not be removed: '$LOGFILE'" >&2
+    update-rc.d -f mtbbb remove
+    rm -fv "$0"
+  fi
+}
+
 case "$1" in
   start)
-    echo "Starting mtbbb..."
-    sudo -u pi bash -c 'sudo /home/pi/mtbblackbox/mtbbb &> log.txt'
+    start
     ;;
   stop)
-    echo "Stopping mtbbb..."
-    sudo -u pi bash -c 'cd /path/to/scripts/ && ./stop-mtbbb.sh'
-    sleep 2
+    stop
+    ;;
+  uninstall)
+    uninstall
+    ;;
+  retart)
+    stop
+    start
     ;;
   *)
-    echo "Usage: /etc/init.d/mtbbb {start|stop}"
-    exit 1
-    ;;
+    echo "Usage: $0 {start|stop|restart|uninstall}"
 esac
-
-exit 0
