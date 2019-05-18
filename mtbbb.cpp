@@ -15,6 +15,7 @@
 #include <libgpsmm.h>
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
+#include "ssd1306_i2c.h"
 
 // class default I2C address is 0x68
 // specific I2C addresses may be passed as a parameter here
@@ -22,38 +23,7 @@
 // AD0 high = 0x69
 MPU6050 mpu;
 
-// uncomment "OUTPUT_READABLE_QUATERNION" if you want to see the actual
-// quaternion components in a [w, x, y, z] format (not best for parsing
-// on a remote host such as Processing or something though)
-// #define OUTPUT_READABLE_QUATERNION
-
-// uncomment "OUTPUT_READABLE_EULER" if you want to see Euler angles
-// (in degrees) calculated from the quaternions coming from the FIFO.
-// Note that Euler angles suffer from gimbal lock (for more info, see
-// http://en.wikipedia.org/wiki/Gimbal_lock)
-//#define OUTPUT_READABLE_EULER
-
-// uncomment "OUTPUT_READABLE_YAWPITCHROLL" if you want to see the yaw/
-// pitch/roll angles (in degrees) calculated from the quaternions coming
-// from the FIFO. Note this also requires gravity vector calculations.
-// Also note that yaw/pitch/roll angles suffer from gimbal lock (for
-// more info, see: http://en.wikipedia.org/wiki/Gimbal_lock)
-#define OUTPUT_READABLE_YAWPITCHROLL
-// uncomment "OUTPUT_READABLE_REALACCEL" if you want to see acceleration
-// components with gravity removed. This acceleration reference frame is
-// not compensated for orientation, so +X is always +X according to the
-// sensor, just without the effects of gravity. If you want acceleration
-// compensated for orientation, us OUTPUT_READABLE_WORLDACCEL instead.
-#define OUTPUT_READABLE_REALACCEL
-
-// uncomment "OUTPUT_READABLE_WORLDACCEL" if you want to see acceleration
-// components with gravity removed and adjusted for the world frame of
-// reference (yaw is relative to initial orientation, since no magnetometer
-// is present in this case). Could be quite handy in some cases.
-#define OUTPUT_READABLE_WORLDACCEL
-
 // MPU control/status vars
-
 bool dmpReady = false;  // set true if DMP init was successful
 uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
 uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
@@ -70,9 +40,18 @@ VectorFloat gravity;    // [x, y, z]            gravity vector
 float euler[3];         // [psi, theta, phi]    Euler angle container
 float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
 
+// gps stuff
 bool gpsfail = false;
 bool newGPSData = false;
 int fifoOverflow = 0;
+
+//stuff for screen
+float maxSpeed = 0;
+std::string maxSpeedStr;
+float posMaxG = 0;
+float negMaxG = 0;
+std::string posMaxGStr;
+std::string negMaxGStr;
 
 // Define for the LEDS
 #define GREEN 0
@@ -83,10 +62,23 @@ int fifoOverflow = 0;
 // ===                      INITIAL SETUP                       ===
 // ================================================================
 
+void printOLED(std::string text, bool clearScreen = false){
+  if(clearScreen){
+    ssd1306_clearDisplay();
+  }
+  ssd1306_drawString(text);
+  ssd1306_display();
+}
+
 void setup() {
 
+    // Boot up screen
+    ssd1306_begin(SSD1306_SWITCHCAPVCC, SSD1306_I2C_ADDRESS);
+    printOLED("  Initializing....", false);
+
     // Setup the GPIO stuff for the LEDs and buttons
-    printf("Initializing wiringPi...\n");
+    fflush(stdout);
+    std::cout << "Initializing wiringPi..." << std::endl;
     wiringPiSetup();
     pinMode(GREEN, OUTPUT);
     pinMode(RED, OUTPUT);
@@ -95,15 +87,15 @@ void setup() {
     digitalWrite(GREEN, LOW);
 
     // initialize device
-    printf("Initializing I2C devices...\n");
+    std::cout << "Initializing I2C devices..." << std::endl;
     mpu.initialize();
 
     // verify connection
-    printf("Testing device connections...\n");
-    printf(mpu.testConnection() ? "MPU6050 connection successful\n" : "MPU6050 connection failed\n");
+    std::cout << "Testing device connections..." << std::endl;
+    std::cout << (mpu.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed") << std::endl;
 
     // load and configure the DMP
-    printf("Initializing DMP...\n");
+    std::cout << "Initializing DMP..." << std::endl;
     devStatus = mpu.dmpInitialize();
 
     mpu.setXAccelOffset(-2081);
@@ -119,7 +111,7 @@ void setup() {
     // make sure it worked (returns 0 if so)
     if (devStatus == 0) {
         // turn on the DMP, now that it's ready
-        printf("Enabling DMP...\n");
+        std::cout << "Enabling DMP..." << std::endl;
         mpu.setDMPEnabled(true);
 
         // enable Arduino interrupt detection
@@ -128,7 +120,7 @@ void setup() {
         mpuIntStatus = mpu.getIntStatus();
 
         // set our DMP Ready flag so the main loop() function knows it's okay to use it
-        printf("DMP ready!\n");
+        std::cout << "DMP ready!" << std::endl;
         dmpReady = true;
 
         // get expected DMP packet size for later comparison
@@ -138,7 +130,7 @@ void setup() {
         // 1 = initial memory load failed
         // 2 = DMP configuration updates failed
         // (if it's going to break, usually the code will be 1)
-        printf("DMP Initialization failed (code %d)\n", devStatus);
+        std::cout << "DMP Initialization failed code: " << devStatus << std::endl;
     }
 
 }
@@ -176,7 +168,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
     if (fifoCount == 1024) {
         // reset so we can continue cleanly
         mpu.resetFIFO();
-        printf("FIFO overflow!\n");
+        std::cout << "FIFO overflow!" << std::endl;
 
         digitalWrite(RED, HIGH);
         digitalWrite(GREEN, HIGH);
@@ -204,16 +196,14 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
 
         // Yaw Pitch Roll
-        printf("ypr  %7.2f %7.2f %7.2f    ", ypr[0] * 180/M_PI, ypr[1] * 180/M_PI, ypr[2] * 180/M_PI);
+        std::cout << std::fixed << std::setprecision(2) << "ypr: " << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << std::endl;
         myfile << std::fixed << std::setprecision(2) << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << ",";
 
         // display real acceleration, adjusted to remove gravity
-        printf("areal %6d %6d %6d    ", (static_cast<float>(aaReal.x) / 4096), (static_cast<float>(aaReal.y) / 4096), (static_cast<float>(aaReal.z) / 4096));
         myfile << (static_cast<float>(aaReal.x) / 4096) << "," << (static_cast<float>(aaReal.y) / 4096) << "," << (static_cast<float>(aaReal.z) / 4096) << ",";
 
         // display initial world-frame acceleration, adjusted to remove gravity
         // and rotated based on known orientation from quaternion
-        printf("aworld %6d %6d %6d \n", (static_cast<float>(aaWorld.x) / 4096), (static_cast<float>(aaWorld.y) / 4096), (static_cast<float>(aaWorld.z) / 4096));
         myfile << (static_cast<float>(aaWorld.x) / 4096) << "," << (static_cast<float>(aaWorld.y) / 4096) << "," << (static_cast<float>(aaWorld.z) / 4096) << ",";
 
         // Display and wriet the GPS data
@@ -223,6 +213,14 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         auto speed     { gpsd_data->fix.speed * MPS_TO_MPH};
         auto alt       { gpsd_data->fix.altitude * METERS_TO_FEET};
 
+        // check for new max speed
+        if(speed > maxSpeed){
+          maxSpeed = speed;
+          std::ostringstream stream;
+          stream << std::fixed << std::setprecision(2) << maxSpeed;
+          maxSpeedStr = stream.str();
+        }
+
         // convert GPSD's timestamp_t into time_t
         time_t seconds { (time_t)ts };
         auto   tm = *std::localtime(&seconds);
@@ -231,20 +229,52 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         oss << std::put_time(&tm, "%d-%m-%Y %H:%M:%S");
         auto time_str { oss.str() };
 
+        std::ostringstream osss;
+        osss << std::put_time(&tm, "%H:%M:%S");
+        auto oled_time_str { osss.str() };
+
+        // If we have received new GPS data, update the screen
+        if(newGPSData){ //fix this
+
+          // display current GPS state
+          if(seconds == 0){
+            // std::string text = "GPS NL";
+            // text = text + "      " + oled_time_str;
+            // printOLED(text, true);
+          } else {
+            // std::string text = "GPS";
+            // text = text + "         " + oled_time_str + "\n\nMax Sp: " + maxSpeedStr + "\nAlt: " + std::to_string(static_cast<int>(alt)) + "\nMax G: [" + posMaxGStr + "," + negMaxGStr +"]";
+            // printOLED(text, true);
+          }
+
+        }
+
         // ouput GPS data
         std::setprecision(6);
         std::cout.setf(std::ios::fixed, std::ios::floatfield);
         //std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
         if(seconds == 0 || newGPSData == false){
           myfile << "," << "," << "," << "," << ","; // << std::endl;
-          digitalWrite(RED, HIGH);
-          digitalWrite(GREEN, HIGH);
         } else {
           myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << ","; // << std::endl;
           newGPSData = false;
         }
 
         myfile << fifoOverflow << std::endl;
+
+        // Highest G z world
+        if((static_cast<float>(aaWorld.z) / 4096) > posMaxG){
+          posMaxG = (static_cast<float>(aaWorld.z) / 4096);
+          std::ostringstream stream2;
+          stream2 << std::fixed << std::setprecision(2) << posMaxG;
+          posMaxGStr = stream2.str();
+        } else if((static_cast<float>(aaWorld.z) / 4096) < negMaxG){
+          negMaxG = (static_cast<float>(aaWorld.z) / 4096);
+          std::ostringstream stream3;
+          stream3 << std::fixed << std::setprecision(2) << negMaxG;
+          negMaxGStr = stream3.str();
+        }
+
     }
 }
 
@@ -276,12 +306,23 @@ int main() {
       gpsfail = true;
     }
 
+    // Clear display before starting
+    printOLED("     RUNNING...     ", true);
+
     for (;;){
       // Run the main loop
       loop(myfile, t0, t1, gps_rec);
 
       // Check for button press. Exit loop if pressed
       if(digitalRead(BUTTON) == HIGH){
+
+        // End Stats
+        std::string text = "      Summary";
+        text = text + "\n\nMax Sp: " + maxSpeedStr + "\nMax G: [" + posMaxGStr + "," + negMaxGStr +"]";
+        printOLED(text, true);
+
+        printOLED("\n\n\n\n\n\n\n  Ending MTBBB....");
+
         break;
       }
     }
