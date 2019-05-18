@@ -77,10 +77,8 @@ void setup() {
     ssd1306_begin(SSD1306_SWITCHCAPVCC, SSD1306_I2C_ADDRESS);
     printOLED("  Initializing....", false);
 
-    std::cout << "Test before printf command" << std::endl;
-    printf("Test printf command\n");
-
     // Setup the GPIO stuff for the LEDs and buttons
+    fflush(stdout);
     printf("Initializing wiringPi...\n");
     wiringPiSetup();
     pinMode(GREEN, OUTPUT);
