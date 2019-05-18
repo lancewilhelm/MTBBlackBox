@@ -2,6 +2,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <sstream>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -11,8 +12,10 @@
 #include <chrono>
 #include <ctime>
 #include <wiringPi.h>
+#include <libgpsmm.h>
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
+#include "ssd1306_i2c.h"
 
 // class default I2C address is 0x68
 // specific I2C addresses may be passed as a parameter here
@@ -20,42 +23,7 @@
 // AD0 high = 0x69
 MPU6050 mpu;
 
-// uncomment "OUTPUT_READABLE_QUATERNION" if you want to see the actual
-// quaternion components in a [w, x, y, z] format (not best for parsing
-// on a remote host such as Processing or something though)
-// #define OUTPUT_READABLE_QUATERNION
-
-// uncomment "OUTPUT_READABLE_EULER" if you want to see Euler angles
-// (in degrees) calculated from the quaternions coming from the FIFO.
-// Note that Euler angles suffer from gimbal lock (for more info, see
-// http://en.wikipedia.org/wiki/Gimbal_lock)
-//#define OUTPUT_READABLE_EULER
-
-// uncomment "OUTPUT_READABLE_YAWPITCHROLL" if you want to see the yaw/
-// pitch/roll angles (in degrees) calculated from the quaternions coming
-// from the FIFO. Note this also requires gravity vector calculations.
-// Also note that yaw/pitch/roll angles suffer from gimbal lock (for
-// more info, see: http://en.wikipedia.org/wiki/Gimbal_lock)
-#define OUTPUT_READABLE_YAWPITCHROLL
-// uncomment "OUTPUT_READABLE_REALACCEL" if you want to see acceleration
-// components with gravity removed. This acceleration reference frame is
-// not compensated for orientation, so +X is always +X according to the
-// sensor, just without the effects of gravity. If you want acceleration
-// compensated for orientation, us OUTPUT_READABLE_WORLDACCEL instead.
-#define OUTPUT_READABLE_REALACCEL
-
-// uncomment "OUTPUT_READABLE_WORLDACCEL" if you want to see acceleration
-// components with gravity removed and adjusted for the world frame of
-// reference (yaw is relative to initial orientation, since no magnetometer
-// is present in this case). Could be quite handy in some cases.
-#define OUTPUT_READABLE_WORLDACCEL
-
-// uncomment "OUTPUT_TEAPOT" if you want output that matches the
-// format used for the InvenSense teapot demo
-//#define OUTPUT_TEAPOT
-
 // MPU control/status vars
-
 bool dmpReady = false;  // set true if DMP init was successful
 uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
 uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
@@ -72,8 +40,18 @@ VectorFloat gravity;    // [x, y, z]            gravity vector
 float euler[3];         // [psi, theta, phi]    Euler angle container
 float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
 
-// packet structure for InvenSense teapot demo
-uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
+// gps stuff
+bool gpsfail = false;
+bool newGPSData = false;
+int fifoOverflow = 0;
+
+//stuff for screen
+float maxSpeed = 0;
+std::string maxSpeedStr;
+float posMaxG = 0;
+float negMaxG = 0;
+std::string posMaxGStr;
+std::string negMaxGStr;
 
 // Define for the LEDS
 #define GREEN 0
@@ -84,10 +62,23 @@ uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\
 // ===                      INITIAL SETUP                       ===
 // ================================================================
 
+void printOLED(std::string text, bool clearScreen = false){
+  if(clearScreen){
+    ssd1306_clearDisplay();
+  }
+  ssd1306_drawString(text);
+  ssd1306_display();
+}
+
 void setup() {
 
+    // Boot up screen
+    ssd1306_begin(SSD1306_SWITCHCAPVCC, SSD1306_I2C_ADDRESS);
+    printOLED("  Initializing....", false);
+
     // Setup the GPIO stuff for the LEDs and buttons
-    printf("Initializing wiringPi...\n");
+    fflush(stdout);
+    std::cout << "Initializing wiringPi..." << std::endl;
     wiringPiSetup();
     pinMode(GREEN, OUTPUT);
     pinMode(RED, OUTPUT);
@@ -96,21 +87,31 @@ void setup() {
     digitalWrite(GREEN, LOW);
 
     // initialize device
-    printf("Initializing I2C devices...\n");
+    std::cout << "Initializing I2C devices..." << std::endl;
     mpu.initialize();
 
     // verify connection
-    printf("Testing device connections...\n");
-    printf(mpu.testConnection() ? "MPU6050 connection successful\n" : "MPU6050 connection failed\n");
+    std::cout << "Testing device connections..." << std::endl;
+    std::cout << (mpu.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed") << std::endl;
 
     // load and configure the DMP
-    printf("Initializing DMP...\n");
+    std::cout << "Initializing DMP..." << std::endl;
     devStatus = mpu.dmpInitialize();
+
+    mpu.setXAccelOffset(-2081);
+    mpu.setYAccelOffset(1071);
+    mpu.setZAccelOffset(1541);
+    mpu.setXGyroOffsetUser(-18);
+    mpu.setYGyroOffsetUser(-51);
+    mpu.setZGyroOffsetUser(-68);
+    mpu.setXGyroOffset(-18);
+    mpu.setYGyroOffset(-51);
+    mpu.setZGyroOffset(-68);
 
     // make sure it worked (returns 0 if so)
     if (devStatus == 0) {
         // turn on the DMP, now that it's ready
-        printf("Enabling DMP...\n");
+        std::cout << "Enabling DMP..." << std::endl;
         mpu.setDMPEnabled(true);
 
         // enable Arduino interrupt detection
@@ -119,7 +120,7 @@ void setup() {
         mpuIntStatus = mpu.getIntStatus();
 
         // set our DMP Ready flag so the main loop() function knows it's okay to use it
-        printf("DMP ready!\n");
+        std::cout << "DMP ready!" << std::endl;
         dmpReady = true;
 
         // get expected DMP packet size for later comparison
@@ -129,35 +130,54 @@ void setup() {
         // 1 = initial memory load failed
         // 2 = DMP configuration updates failed
         // (if it's going to break, usually the code will be 1)
-        printf("DMP Initialization failed (code %d)\n", devStatus);
+        std::cout << "DMP Initialization failed code: " << devStatus << std::endl;
     }
-}
 
+}
 
 // ================================================================
 // ===                    MAIN PROGRAM LOOP                     ===
 // ================================================================
 
-void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_resolution_clock::time_point &t1) {
+void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_resolution_clock::time_point &t1, gpsmm &gps_rec) {
     // if programming failed, don't try to do anything
     if (!dmpReady) return;
 
+    // create a structure for the data
+    struct gps_data_t *gpsd_data;
+
+    // Get GPS goodies if setup did not fail and we are not waiting for a packet
+    if(!gpsfail && gps_rec.waiting(100)){
+      std::cout << "GPS READY" << std::endl;
+      newGPSData = true;
+      // Read the GPS data and error check at the same time
+      if ((gpsd_data = gps_rec.read()) == NULL) {
+        std::cerr << "GPSD READ ERROR.\n";
+        gpsfail = true;
+      } else if ((gpsd_data->fix.mode < MODE_2D)) {
+          std::cout << "RETURNING DUE TO FIX MODE ERR" << std::endl;
+      }
+    }
 
     // get current FIFO count
     fifoCount = mpu.getFIFOCount();
 
+    // debugging
+    fifoOverflow = fifoCount;
+
     if (fifoCount == 1024) {
         // reset so we can continue cleanly
         mpu.resetFIFO();
-        printf("FIFO overflow!\n");
+        std::cout << "FIFO overflow!" << std::endl;
 
         digitalWrite(RED, HIGH);
         digitalWrite(GREEN, HIGH);
 
     // otherwise, check for DMP data ready interrupt (this should happen frequently)
-    } else if (fifoCount >= 42) {
+  } else if (fifoCount >= 42 && gpsd_data != NULL) {
         // read a packet from FIFO
         mpu.getFIFOBytes(fifoBuffer, packetSize);
+        //mpu.resetFIFO();
 
         digitalWrite(RED, LOW);
         digitalWrite(GREEN, HIGH);
@@ -167,65 +187,94 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         std::chrono::duration<double> duration = t1 - t0;
         myfile << std::setprecision(6) << duration.count() << ",";
 
-        // Start going down and displaying data
-        #ifdef OUTPUT_READABLE_QUATERNION
-            // display quaternion values in easy matrix form: w x y z
-            mpu.dmpGetQuaternion(&q, fifoBuffer);
-            printf("quat %7.2f %7.2f %7.2f %7.2f    ", q.w,q.x,q.y,q.z);
-        #endif
+        // Gather data from dmp
+        mpu.dmpGetQuaternion(&q, fifoBuffer);
+        mpu.dmpGetAccel(&aa, fifoBuffer);
+        mpu.dmpGetGravity(&gravity, &q);
+        mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+        mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
+        mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
 
-        #ifdef OUTPUT_READABLE_EULER
-            // display Euler angles in degrees
-            mpu.dmpGetQuaternion(&q, fifoBuffer);
-            mpu.dmpGetEuler(euler, &q);
-            printf("euler %7.2f %7.2f %7.2f    ", euler[0] * 180/M_PI, euler[1] * 180/M_PI, euler[2] * 180/M_PI);
-        #endif
+        // Yaw Pitch Roll
+        std::cout << std::fixed << std::setprecision(2) << "ypr: " << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << std::endl;
+        myfile << std::fixed << std::setprecision(2) << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << ",";
 
-        #ifdef OUTPUT_READABLE_YAWPITCHROLL
-            // display Euler angles in degrees
-            mpu.dmpGetQuaternion(&q, fifoBuffer);
-            mpu.dmpGetGravity(&gravity, &q);
-            mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-            printf("ypr  %7.2f %7.2f %7.2f    ", ypr[0] * 180/M_PI, ypr[1] * 180/M_PI, ypr[2] * 180/M_PI);
-            myfile << std::fixed << std::setprecision(2) << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << ",";
-        #endif
+        // display real acceleration, adjusted to remove gravity
+        myfile << (static_cast<float>(aaReal.x) / 4096) << "," << (static_cast<float>(aaReal.y) / 4096) << "," << (static_cast<float>(aaReal.z) / 4096) << ",";
 
-        #ifdef OUTPUT_READABLE_REALACCEL
-            // display real acceleration, adjusted to remove gravity
-            mpu.dmpGetQuaternion(&q, fifoBuffer);
-            mpu.dmpGetAccel(&aa, fifoBuffer);
-            mpu.dmpGetGravity(&gravity, &q);
-            mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-            printf("areal %6d %6d %6d    ", aaReal.x, aaReal.y, aaReal.z);
-            myfile << aaReal.x << "," << aaReal.y << "," << aaReal.z << ",";
-        #endif
+        // display initial world-frame acceleration, adjusted to remove gravity
+        // and rotated based on known orientation from quaternion
+        myfile << (static_cast<float>(aaWorld.x) / 4096) << "," << (static_cast<float>(aaWorld.y) / 4096) << "," << (static_cast<float>(aaWorld.z) / 4096) << ",";
 
-        #ifdef OUTPUT_READABLE_WORLDACCEL
-            // display initial world-frame acceleration, adjusted to remove gravity
-            // and rotated based on known orientation from quaternion
-            mpu.dmpGetQuaternion(&q, fifoBuffer);
-            mpu.dmpGetAccel(&aa, fifoBuffer);
-            mpu.dmpGetGravity(&gravity, &q);
-            mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-            printf("aworld %6d %6d %6d    ", aaWorld.x, aaWorld.y, aaWorld.z);
-            myfile << aaWorld.x << "," << aaWorld.y << "," << aaWorld.z;
-        #endif
+        // Display and wriet the GPS data
+        timestamp_t ts { gpsd_data->fix.time };
+        auto latitude  { gpsd_data->fix.latitude };
+        auto longitude { gpsd_data->fix.longitude };
+        auto speed     { gpsd_data->fix.speed * MPS_TO_MPH};
+        auto alt       { gpsd_data->fix.altitude * METERS_TO_FEET};
 
-        #ifdef OUTPUT_TEAPOT
-            // display quaternion values in InvenSense Teapot demo format:
-            teapotPacket[2] = fifoBuffer[0];
-            teapotPacket[3] = fifoBuffer[1];
-            teapotPacket[4] = fifoBuffer[4];
-            teapotPacket[5] = fifoBuffer[5];
-            teapotPacket[6] = fifoBuffer[8];
-            teapotPacket[7] = fifoBuffer[9];
-            teapotPacket[8] = fifoBuffer[12];
-            teapotPacket[9] = fifoBuffer[13];
-            Serial.write(teapotPacket, 14);
-            teapotPacket[11]++; // packetCount, loops at 0xFF on purpose
-        #endif
-        myfile << "\n";
-        printf("\n");
+        // check for new max speed
+        if(speed > maxSpeed){
+          maxSpeed = speed;
+          std::ostringstream stream;
+          stream << std::fixed << std::setprecision(2) << maxSpeed;
+          maxSpeedStr = stream.str();
+        }
+
+        // convert GPSD's timestamp_t into time_t
+        time_t seconds { (time_t)ts };
+        auto   tm = *std::localtime(&seconds);
+
+        std::ostringstream oss;
+        oss << std::put_time(&tm, "%d-%m-%Y %H:%M:%S");
+        auto time_str { oss.str() };
+
+        std::ostringstream osss;
+        osss << std::put_time(&tm, "%H:%M:%S");
+        auto oled_time_str { osss.str() };
+
+        // If we have received new GPS data, update the screen
+        if(newGPSData){ //fix this
+
+          // display current GPS state
+          if(seconds == 0){
+            // std::string text = "GPS NL";
+            // text = text + "      " + oled_time_str;
+            // printOLED(text, true);
+          } else {
+            // std::string text = "GPS";
+            // text = text + "         " + oled_time_str + "\n\nMax Sp: " + maxSpeedStr + "\nAlt: " + std::to_string(static_cast<int>(alt)) + "\nMax G: [" + posMaxGStr + "," + negMaxGStr +"]";
+            // printOLED(text, true);
+          }
+
+        }
+
+        // ouput GPS data
+        std::setprecision(6);
+        std::cout.setf(std::ios::fixed, std::ios::floatfield);
+        //std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
+        if(seconds == 0 || newGPSData == false){
+          myfile << "," << "," << "," << "," << ","; // << std::endl;
+        } else {
+          myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << ","; // << std::endl;
+          newGPSData = false;
+        }
+
+        myfile << fifoOverflow << std::endl;
+
+        // Highest G z world
+        if((static_cast<float>(aaWorld.z) / 4096) > posMaxG){
+          posMaxG = (static_cast<float>(aaWorld.z) / 4096);
+          std::ostringstream stream2;
+          stream2 << std::fixed << std::setprecision(2) << posMaxG;
+          posMaxGStr = stream2.str();
+        } else if((static_cast<float>(aaWorld.z) / 4096) < negMaxG){
+          negMaxG = (static_cast<float>(aaWorld.z) / 4096);
+          std::ostringstream stream3;
+          stream3 << std::fixed << std::setprecision(2) << negMaxG;
+          negMaxGStr = stream3.str();
+        }
+
     }
 }
 
@@ -238,7 +287,7 @@ int main() {
     std::chrono::time_point<std::chrono::high_resolution_clock> t0, t1;
     t0 = std::chrono::high_resolution_clock::now();
 
-    // Initialize file for recording, write the first row of it for a header
+    // Initialize file for recording
     std::ofstream myfile;
 
     // Open the file
@@ -247,14 +296,33 @@ int main() {
     os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
     std::string filename = os.str();
     myfile.open (filename);
-    myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ\n";
+    myfile << "t,yaw,pitch,roll,arealX,arealY,arealZ,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt,overflow\n";
+
+    // Initialize GPS
+    gpsmm gps_rec("localhost", DEFAULT_GPSD_PORT);
+
+    if (gps_rec.stream(WATCH_ENABLE | WATCH_JSON) == NULL) {
+      std::cerr << "No GPSD running.\n";
+      gpsfail = true;
+    }
+
+    // Clear display before starting
+    printOLED("     RUNNING...     ", true);
 
     for (;;){
       // Run the main loop
-      loop(myfile, t0, t1);
+      loop(myfile, t0, t1, gps_rec);
 
       // Check for button press. Exit loop if pressed
       if(digitalRead(BUTTON) == HIGH){
+
+        // End Stats
+        std::string text = "      Summary";
+        text = text + "\n\nMax Sp: " + maxSpeedStr + "\nMax G: [" + posMaxGStr + "," + negMaxGStr +"]";
+        printOLED(text, true);
+
+        printOLED("\n\n\n\n\n\n\n  Ending MTBBB....");
+
         break;
       }
     }

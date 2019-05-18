@@ -1,14 +1,17 @@
-
 all: mtbbb
 
-HDRS = helper_3dmath.h I2Cdev.h MPU6050_6Axis_MotionApps20.h MPU6050.h
-CMN_OBJS = I2Cdev.o MPU6050.o
+HDRS = helper_3dmath.h I2Cdev.h MPU6050_6Axis_MotionApps20.h MPU6050.h ssd1306_i2c.h
+CMN_OBJS = I2Cdev.o MPU6050.o ssd1306_i2c.o
 MTBBB_OBJS = mtbbb.o
+CFLAGS = 'pkg-config --cflags libgps'
+LDFLAGS = '$(pkg-config --libs libgps)'
 
 $(CMN_OBJS) $(MTBBB_OBJS) : $(HDRS)
 
 mtbbb: $(CMN_OBJS) $(MTBBB_OBJS)
-	$(CXX) -o $@ $^ -lm -lwiringPi
+	$(CXX) -Wall -std=c++14 -pedantic $(LDFLAGS) -o $@ $^ -lm -lwiringPi
+
+	#g++ -Wall -std=c++14 -pedantic $(pkg-config --libs libgps) -o mtbbb I2Cdev.o MPU6050.o mtbbb.o ssd1306_i2c.o -lm -lwiringPi
 
 # 'make test_3d' will give you a test_3d that is controlled via the keyboard rather
 # than by moving the MPU6050.  Use the keys x, X, y, Y, z, Z, and q to exit.
