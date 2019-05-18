@@ -52,7 +52,6 @@ float posMaxG = 0;
 float negMaxG = 0;
 std::string posMaxGStr;
 std::string negMaxGStr;
-bool updateScreen = false;
 
 // Define for the LEDS
 #define GREEN 0
@@ -240,18 +239,14 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           // display current GPS state
           if(seconds == 0){
             // std::string text = "GPS NL";
-            std::string text = "G";
             // text = text + "      " + oled_time_str;
-            printOLED(text, true);
+            // printOLED(text, true);
           } else {
             // std::string text = "GPS";
-            std::string text = "G";
             // text = text + "         " + oled_time_str + "\n\nMax Sp: " + maxSpeedStr + "\nAlt: " + std::to_string(static_cast<int>(alt)) + "\nMax G: [" + posMaxGStr + "," + negMaxGStr +"]";
-            printOLED(text, true);
+            // printOLED(text, true);
           }
 
-          // In the end, flip bool
-          updateScreen = false;
         }
 
         // ouput GPS data
