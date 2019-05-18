@@ -21,8 +21,9 @@ start() {
     return 1
   fi
   echo 'Starting service…' >&2
-  local CMD="$SCRIPT &> \"$LOGFILE\" & echo \$!"
-  su -c "$CMD" $RUNAS > "$PIDFILE"
+  sudo -u pi -c "/home/pi/mtbblackbox/mtbbb &> log.txt"
+  ###local CMD="$SCRIPT &> \"$LOGFILE\" & echo \$!"
+  ###su -c "$CMD" $RUNAS > "$PIDFILE"
   echo 'Service started' >&2
 }
 
