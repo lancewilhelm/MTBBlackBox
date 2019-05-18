@@ -316,6 +316,11 @@ int main() {
       // Check for button press. Exit loop if pressed
       if(digitalRead(BUTTON) == HIGH){
 
+        // End Stats
+        std::string text = "      Summary";
+        text = text + "\n\nMax Sp: " + maxSpeedStr + "\nMax G: [" + posMaxGStr + "," + negMaxGStr +"]";
+        printOLED(text, true);
+
         printOLED("\n\n\n\n\n\n\n  Ending MTBBB....");
 
         break;
