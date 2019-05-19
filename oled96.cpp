@@ -207,20 +207,21 @@ static void oledWriteDataBlock(const std::string& ucBuf, int iLen)
 // Length can be anything from 1 to 1024 (whole display)
 void oledWriteLogo()
 {
+  int y;
+  int iLines, iCols;
 
-  char ucTemp[1025];
-  int rc;
+  	if (file_i2c == 0) return -1; // not initialized
 
-  ucTemp[0] = 0x40; // data command
-  std::memcpy(&ucTemp[1], &mtbbblogo, 1024);
+  	iLines = (oled_type == OLED_128x32 || oled_type == OLED_64x32) ? 4:8;
+  	iCols = (oled_type == OLED_64x32) ? 4:8;
 
-  rc = write(file_i2c, ucTemp, 1025);
-  if (rc) {} // suppress warning
-  // Keep a copy in local buffer
-  std::memcpy(&ucScreen[iScreenOffset], &mtbbblogo, 1024);
-
-  iScreenOffset += 1024;
-
+  	// std::memset(temp.c_str(), ucData, 128);
+  	for (y=0; y<iLines; y++)
+  	{
+  		oledSetPosition(0,y); // set to (0,Y)
+  		oledWriteDataBlock(&mtbbblogo[(y*128)], iCols*16); // fill with data byte
+  	} // for y
+  	return 0;
 }
 
 // Set (or clear) an individual pixel
