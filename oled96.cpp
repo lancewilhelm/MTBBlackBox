@@ -210,8 +210,6 @@ void oledWriteLogo()
   int y;
   int iLines, iCols;
 
-  	if (file_i2c == 0) return -1; // not initialized
-
   	iLines = 8;
   	iCols = 8;
 
