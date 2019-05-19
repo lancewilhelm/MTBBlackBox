@@ -235,6 +235,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 
         // convert GPSD's timestamp_t into time_t
         time_t seconds { (time_t)ts };
+        seconds -= 25200; // 7 hour correction for time zone
         auto   tm = *std::localtime(&seconds);
 
         std::ostringstream oss;
