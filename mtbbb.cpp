@@ -363,9 +363,9 @@ int main() {
 
     bool checkFile = fileExists(filename);
     if(checkFile){
-      oledWriteString(1,2,"Data file exists!");
+      oledWriteString(2,1,"Data file exists!");
     } else {
-      oledWriteString(3,2,"NO DATA FILE!");
+      oledWriteString(4,1,"NO DATA FILE!");
     }
     return 0;
 }
