@@ -86,7 +86,7 @@ void setup() {
     int i = oledInit(iChannel, iOLEDAddr, iOLEDType, bFlip, bInvert);
     oledFill(0x00); // Clear the screen
     oledWriteLogo();
-    oledWriteString(2,0,"INITIALIZING...",FONT_XSMALL);
+    oledWriteString(2,0,"INITIALIZING...");
 
     // Setup the GPIO stuff for the LEDs and buttons
     fflush(stdout);
@@ -253,13 +253,13 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 
           // display current GPS state
           if(seconds == 0){
-            oledWriteString(0,0,"GPS NL",FONT_XSMALL);
-            oledWriteString(13,0,oled_time_str,FONT_XSMALL);
+            oledWriteString(0,0,"GPS NL");
+            oledWriteString(13,0,oled_time_str);
           } else {
-            oledWriteString(0,0,"GPS   ",FONT_XSMALL);
-            oledWriteString(13,0,oled_time_str,FONT_XSMALL);
-            oledWriteString(0,3,maxSpeedLine,FONT_XSMALL);
-            oledWriteString(0,4,maxGLine,FONT_XSMALL);
+            oledWriteString(0,0,"GPS   ");
+            oledWriteString(13,0,oled_time_str);
+            oledWriteString(0,3,maxSpeedLine);
+            oledWriteString(0,4,maxGLine);
           }
 
         }

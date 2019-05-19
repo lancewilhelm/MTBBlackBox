@@ -11,7 +11,7 @@ $(CMN_OBJS) $(MTBBB_OBJS) : $(HDRS)
 mtbbb: $(CMN_OBJS) $(MTBBB_OBJS)
 	$(CXX) -Wall -std=c++14 -pedantic $(LDFLAGS) -o $@ $^ -lm -lwiringPi
 
-	#g++ -Wall -std=c++14 -pedantic $(pkg-config --libs libgps) -o mtbbb I2Cdev.o MPU6050.o mtbbb.o ssd1306_i2c.o -lm -lwiringPi -loled96 -lpthread
+	#g++ -Wall -std=c++14 -pedantic $(pkg-config --libs libgps) -o mtbbb I2Cdev.o MPU6050.o mtbbb.o -lm -lwiringPi -loled96 -lpthread
 
 # 'make test_3d' will give you a test_3d that is controlled via the keyboard rather
 # than by moving the MPU6050.  Use the keys x, X, y, Y, z, Z, and q to exit.

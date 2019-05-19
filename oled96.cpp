@@ -28,7 +28,7 @@
 #define pgm_read_byte(addr) (*(const unsigned char *)(addr))
 
 // extern char ucFont[], ucSmallFont[];
-extern char ucFont[], ucSmallFont[], verysmallfont[];
+extern char verysmallfont[], mtbbblogo[];
 char space[]= {0x00, 0x00, 0x00, 0x00, 0x00};
 char lt[]= {0x7F, 0x40, 0x40, 0x40, 0x40, 0x00, 0x03, 0x01, 0x7F, 0x01, 0x03, 0x00};
 static int iScreenOffset; // current write offset of screen data
@@ -256,7 +256,7 @@ char uc, ucOld;
 // The X position is in character widths (8 or 16)
 // The Y position is in memory pages (8 lines each)
 //
-int oledWriteString(int x, int y, std::string szMsg, int iSize)
+int oledWriteString(int x, int y, std::string szMsg)
 {
 int i, iLen;
 std::string s;
@@ -264,36 +264,8 @@ std::string s;
 //debugging
 // std::cout << szMsg << std::endl;
 
-	if (file_i2c == 0) return -1; // not initialized
-	if (iSize < FONT_NORMAL || iSize > FONT_XSMALL)
-		return -1;
-
 	iLen = szMsg.length();
 
-	if (iSize == FONT_NORMAL) // draw 8x8 font
-	{
-		oledSetPosition(x*8, y);
-		if (iLen + x > 16) iLen = 16 - x; // can't display it
-		if (iLen < 0)return -1;
-
-		for (i=0; i<iLen; i++)
-		{
-			s = &ucFont[(char)szMsg[i] * 8];
-			oledWriteDataBlock(s, 8); // write character pattern
-		}
-	}
-	else if (iSize == FONT_SMALL)// 6x8
-	{
-		oledSetPosition(x*6, y);
-		if (iLen + x > 21) iLen = 21 - x;
-		if (iLen < 0) return -1;
-
-		for (i=0; i<iLen; i++)
-		{
-			s = &ucSmallFont[(char)szMsg[i]*6];
-			oledWriteDataBlock(s, 6);
-		}
-	} else {
     oledSetPosition(x*6, y);
 
 		if (iLen + x > 25) iLen = 25 - x;
@@ -321,7 +293,6 @@ std::string s;
       }
 		}
 
-  }
 	return 0;
 } /* oledWriteString() */
 
