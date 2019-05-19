@@ -83,13 +83,13 @@ void signalHandler( int signum ) {
 void setup() {
 
     // OLED Init
-    i = oledInit(iChannel, iOLEDAddr, iOLEDType, bFlip, bInvert);
+    int i = oledInit(iChannel, iOLEDAddr, iOLEDType, bFlip, bInvert);
     oledFill(0x00); // Clear the screen
     oledWriteString(0,2,"INITIALIZING...",FONT_XSMALL);
 
     // if the screen didn't boot, just stop...
     if (i == 0){
-      exit();
+      exit(2);
     }
 
     // Setup the GPIO stuff for the LEDs and buttons
