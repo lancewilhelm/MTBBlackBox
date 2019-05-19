@@ -203,6 +203,26 @@ static void oledWriteDataBlock(const std::string& ucBuf, int iLen)
 
 }
 
+// Write a block of pixel data to the OLED
+// Length can be anything from 1 to 1024 (whole display)
+static void oledWriteLogo()
+{
+
+  char ucTemp[1025];
+  int rc;
+
+  ucTemp[0] = 0x40; // data command
+  std::memcpy(&ucTemp[1], &logo, 1024);
+
+  rc = write(file_i2c, ucTemp, 1025);
+  if (rc) {} // suppress warning
+  // Keep a copy in local buffer
+  std::memcpy(&ucScreen[iScreenOffset], ucBuf.data(), 1024);
+
+  iScreenOffset += 1024;
+
+}
+
 // Set (or clear) an individual pixel
 // The local copy of the frame buffer is used to avoid
 // reading data from the display controller
