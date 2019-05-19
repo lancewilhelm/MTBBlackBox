@@ -205,7 +205,7 @@ static void oledWriteDataBlock(const std::string& ucBuf, int iLen)
 
 // Write a block of pixel data to the OLED
 // Length can be anything from 1 to 1024 (whole display)
-static void oledWriteLogo()
+void oledWriteLogo()
 {
 
   char ucTemp[1025];
