@@ -217,7 +217,7 @@ static void oledWriteLogo()
   rc = write(file_i2c, ucTemp, 1025);
   if (rc) {} // suppress warning
   // Keep a copy in local buffer
-  std::memcpy(&ucScreen[iScreenOffset], ucBuf.data(), 1024);
+  std::memcpy(&ucScreen[iScreenOffset], &logo, 1024);
 
   iScreenOffset += 1024;
 

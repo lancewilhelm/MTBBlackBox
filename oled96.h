@@ -107,6 +107,9 @@ int oledFill(char ucPattern);
 // bLarge = 0 - 8x8 font, bLarge = 1 - 16x24 font
 int oledWriteString(int x, int y, std::string szMsg, int iSize);
 
+//Writes the logo on screen
+void oledWriteLogo();
+
 // Sets a pixel to On (1) or Off (0)
 // Coordinate system is pixels, not text rows (0-127, 0-63)
 int oledSetPixel(int x, int y, char ucPixel);
