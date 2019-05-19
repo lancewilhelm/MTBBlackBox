@@ -84,8 +84,9 @@ void setup() {
 
     // OLED Init
     int i = oledInit(iChannel, iOLEDAddr, iOLEDType, bFlip, bInvert);
-    oledFill(0x00); // Clear the screen
+    // oledFill(0x00); // Clear the screen
     oledWriteLogo();
+    usleep(100000);
     oledWriteString(2,0,"INITIALIZING...");
 
     // Setup the GPIO stuff for the LEDs and buttons
