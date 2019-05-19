@@ -80,14 +80,6 @@ void signalHandler( int signum ) {
    exit(signum);
 }
 
-void printOLED(std::string text, bool clearScreen = false){
-  if(clearScreen){
-    ssd1306_clearDisplay();
-  }
-  ssd1306_drawString(text);
-  ssd1306_display();
-}
-
 void setup() {
 
     // OLED Init
