@@ -15,7 +15,8 @@
 #include <libgpsmm.h>
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
-#include "ssd1306_i2c.h"
+#include <csignal>
+#include "oled96.h"
 
 // class default I2C address is 0x68
 // specific I2C addresses may be passed as a parameter here
@@ -42,6 +43,7 @@ float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gra
 
 // gps stuff
 bool gpsfail = false;
+bool gpsLock = false;
 bool newGPSData = false;
 int fifoOverflow = 0;
 
@@ -52,6 +54,12 @@ float posMaxG = 0;
 float negMaxG = 0;
 std::string posMaxGStr;
 std::string negMaxGStr;
+int iChannel = 1;	// I2C bus 1
+int iOLEDAddr = 0x3c; // typical address; it can also be 0x3d
+int iOLEDType = OLED_128x64; // Change this for your specific display
+int bFlip = 0;
+int bInvert = 0;
+
 
 // Define for the LEDS
 #define GREEN 0
@@ -61,6 +69,16 @@ std::string negMaxGStr;
 // ================================================================
 // ===                      INITIAL SETUP                       ===
 // ================================================================
+
+void signalHandler( int signum ) {
+   std::cout << "Interrupt signal (" << signum << ") received.\n";
+
+   // cleanup and close up stuff here
+	 // oledShutdown();
+
+   // terminate program
+   exit(signum);
+}
 
 void printOLED(std::string text, bool clearScreen = false){
   if(clearScreen){
@@ -72,9 +90,15 @@ void printOLED(std::string text, bool clearScreen = false){
 
 void setup() {
 
-    // Boot up screen
-    ssd1306_begin(SSD1306_SWITCHCAPVCC, SSD1306_I2C_ADDRESS);
-    printOLED("  Initializing....", false);
+    // OLED Init
+    i = oledInit(iChannel, iOLEDAddr, iOLEDType, bFlip, bInvert);
+    oledFill(0x00); // Clear the screen
+    oledWriteString(0,2,"INITIALIZING...",FONT_XSMALL);
+
+    // if the screen didn't boot, just stop...
+    if (i == 0){
+      exit();
+    }
 
     // Setup the GPIO stuff for the LEDs and buttons
     fflush(stdout);
@@ -238,13 +262,9 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 
           // display current GPS state
           if(seconds == 0){
-            // std::string text = "GPS NL";
-            // text = text + "      " + oled_time_str;
-            // printOLED(text, true);
+            oledWriteString(0,0,"GPS NL",FONT_XSMALL);
           } else {
-            // std::string text = "GPS";
-            // text = text + "         " + oled_time_str + "\n\nMax Sp: " + maxSpeedStr + "\nAlt: " + std::to_string(static_cast<int>(alt)) + "\nMax G: [" + posMaxGStr + "," + negMaxGStr +"]";
-            // printOLED(text, true);
+            oledWriteString(0,0,"GPS   ",FONT_XSMALL);
           }
 
         }
@@ -279,6 +299,10 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 }
 
 int main() {
+
+    // register signal SIGINT and signal handler
+    signal(SIGINT, signalHandler);
+
     // Setup the MPU6050 stuff
     setup();
     usleep(100000);   // This is important I think...
@@ -307,7 +331,8 @@ int main() {
     }
 
     // Clear display before starting
-    printOLED("     RUNNING...     ", true);
+    oledFill(0x00); // Clear the screen
+    oledWriteString(0,4,"RUNNING...",FONT_XSMALL);
 
     for (;;){
       // Run the main loop
@@ -317,11 +342,11 @@ int main() {
       if(digitalRead(BUTTON) == HIGH){
 
         // End Stats
-        std::string text = "      Summary";
-        text = text + "\n\nMax Sp: " + maxSpeedStr + "\nMax G: [" + posMaxGStr + "," + negMaxGStr +"]";
-        printOLED(text, true);
-
-        printOLED("\n\n\n\n\n\n\n  Ending MTBBB....");
+        // std::string text = "      Summary";
+        // text = text + "\n\nMax Sp: " + maxSpeedStr + "\nMax G: [" + posMaxGStr + "," + negMaxGStr +"]";
+        // printOLED(text, true);
+        //
+        oledWriteString(7,1,"Ending MTBBB....",FONT_XSMALL);
 
         break;
       }
