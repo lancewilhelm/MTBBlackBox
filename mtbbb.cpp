@@ -250,8 +250,10 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           // display current GPS state
           if(seconds == 0){
             oledWriteString(0,0,"GPS NL",FONT_XSMALL);
+            oledWriteString(12,0,oled_time_str,FONT_XSMALL);
           } else {
             oledWriteString(0,0,"GPS   ",FONT_XSMALL);
+            oledWriteString(12,0,oled_time_str,FONT_XSMALL);
           }
 
         }
@@ -319,7 +321,6 @@ int main() {
 
     // Clear display before starting
     oledFill(0x00); // Clear the screen
-    oledWriteString(4,0,"RUNNING...",FONT_XSMALL);
 
     for (;;){
       // Run the main loop
