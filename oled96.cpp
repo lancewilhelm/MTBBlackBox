@@ -212,8 +212,8 @@ void oledWriteLogo()
 
   	if (file_i2c == 0) return -1; // not initialized
 
-  	iLines = (oled_type == OLED_128x32 || oled_type == OLED_64x32) ? 4:8;
-  	iCols = (oled_type == OLED_64x32) ? 4:8;
+  	iLines = 8;
+  	iCols = 8;
 
   	// std::memset(temp.c_str(), ucData, 128);
   	for (y=0; y<iLines; y++)
@@ -221,7 +221,6 @@ void oledWriteLogo()
   		oledSetPosition(0,y); // set to (0,Y)
   		oledWriteDataBlock(&mtbbblogo[(y*128)], iCols*16); // fill with data byte
   	} // for y
-  	return 0;
 }
 
 // Set (or clear) an individual pixel
