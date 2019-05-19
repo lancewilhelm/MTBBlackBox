@@ -85,12 +85,7 @@ void setup() {
     // OLED Init
     int i = oledInit(iChannel, iOLEDAddr, iOLEDType, bFlip, bInvert);
     oledFill(0x00); // Clear the screen
-    oledWriteString(0,2,"INITIALIZING...",FONT_XSMALL);
-
-    // if the screen didn't boot, just stop...
-    if (i == 0){
-      exit(2);
-    }
+    oledWriteString(2,0,"INITIALIZING...",FONT_XSMALL);
 
     // Setup the GPIO stuff for the LEDs and buttons
     fflush(stdout);
@@ -324,7 +319,7 @@ int main() {
 
     // Clear display before starting
     oledFill(0x00); // Clear the screen
-    oledWriteString(0,4,"RUNNING...",FONT_XSMALL);
+    oledWriteString(4,0,"RUNNING...",FONT_XSMALL);
 
     for (;;){
       // Run the main loop
@@ -338,7 +333,7 @@ int main() {
         // text = text + "\n\nMax Sp: " + maxSpeedStr + "\nMax G: [" + posMaxGStr + "," + negMaxGStr +"]";
         // printOLED(text, true);
         //
-        oledWriteString(7,1,"Ending MTBBB....",FONT_XSMALL);
+        oledWriteString(1,7,"Ending MTBBB....",FONT_XSMALL);
 
         break;
       }
