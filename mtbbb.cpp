@@ -247,6 +247,9 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         // If we have received new GPS data, update the screen
         if(newGPSData){ //fix this
 
+          std::string maxSpeedLine = "Max Sp: " + maxSpeedStr;
+          std::string maxGLine = "Max G: [" + posMaxGStr + "," + negMaxGStr +"]";
+
           // display current GPS state
           if(seconds == 0){
             oledWriteString(0,0,"GPS NL",FONT_XSMALL);
@@ -254,6 +257,8 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           } else {
             oledWriteString(0,0,"GPS   ",FONT_XSMALL);
             oledWriteString(12,0,oled_time_str,FONT_XSMALL);
+            oledWriteString(0,3,maxSpeedLine,FONT_XSMALL);
+            oledWriteString(0,4,maxGLine,FONT_XSMALL);
           }
 
         }
@@ -329,11 +334,6 @@ int main() {
       // Check for button press. Exit loop if pressed
       if(digitalRead(BUTTON) == HIGH){
 
-        // End Stats
-        // std::string text = "      Summary";
-        // text = text + "\n\nMax Sp: " + maxSpeedStr + "\nMax G: [" + posMaxGStr + "," + negMaxGStr +"]";
-        // printOLED(text, true);
-        //
         oledWriteString(1,7,"Ending MTBBB....",FONT_XSMALL);
 
         break;
