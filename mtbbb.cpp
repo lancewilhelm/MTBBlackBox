@@ -335,7 +335,7 @@ int main() {
       // Check for button press. Exit loop if pressed
       if(digitalRead(BUTTON) == HIGH){
 
-        oledWriteString(2,7,"Ending MTBBB....",FONT_XSMALL);
+        oledWriteString(2,7,"Ending MTBBB....");
 
         break;
       }
