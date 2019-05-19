@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <iostream>
+#include <sys/stat.h>
 #include <iomanip>
 #include <fstream>
 #include <sstream>
@@ -78,6 +79,11 @@ void signalHandler( int signum ) {
 
    // terminate program
    exit(signum);
+}
+
+bool fileExists (const std::string& name) {
+  struct stat buffer;
+  return (stat (name.c_str(), &buffer) == 0);
 }
 
 void setup() {
@@ -355,5 +361,11 @@ int main() {
     delay(500);
     digitalWrite(RED, LOW);
 
+    bool checkFile = fileExists(filename);
+    if(checkFile){
+      oledWriteString(1,2,"Data file exists!");
+    } else {
+      oledWriteString(3,2,"NO DATA FILE!");
+    }
     return 0;
 }
