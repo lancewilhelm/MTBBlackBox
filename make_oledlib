@@ -1,0 +1,19 @@
+CFLAGS=-c -Wall -O2
+LIBS = -lm -lpthread
+CC = g++
+
+all: liboled96.a
+
+liboled96.a: fonts.o oled96.o
+	ar -rc liboled96.a oled96.o fonts.o ;\
+	sudo cp liboled96.a /usr/local/lib ;\
+	sudo cp oled96.h /usr/local/include
+
+oled96.o: oled96.cpp
+	$(CC) $(CFLAGS) oled96.cpp
+
+fonts.o: fonts.cpp
+	$(CC) $(CFLAGS) fonts.cpp
+
+clean:
+	rm -rf *.o liboled.a
