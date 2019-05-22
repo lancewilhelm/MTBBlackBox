@@ -99,12 +99,12 @@ bool fileExists (const std::string& name) {
 }
 
 float averageBuffer(){
-  int sum = 0;
+  float sum = 0;
   for(int i = 0; i < maxBufferSize; i++){
     sum += smoothBuffer[i];
   }
 
-  int average = sum/maxBufferSize;
+  float average = sum/maxBufferSize;
   return average;
 }
 
