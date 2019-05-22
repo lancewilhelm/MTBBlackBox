@@ -68,7 +68,7 @@ float RC = 0.3;
 float alpha = dt / (RC + dt);
 
 //smoothing using moving average
-int maxBufferSize = 10;
+const int maxBufferSize = 10;
 float smoothBuffer[maxBufferSize];
 bool bufferFull = false;
 int bufferIndex = 0;
