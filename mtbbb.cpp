@@ -245,7 +245,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
 
         // World z moothing using MA
-        smoothBuffer[bufferIndex] = (static_cast<float>(aaWorld.z) / 4096)
+        smoothBuffer[bufferIndex] = (static_cast<float>(aaWorld.z) / 4096);
         increaseBufferIndex();
         if(bufferFull){
           float zMA = averageBuffer();
