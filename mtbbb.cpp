@@ -72,6 +72,7 @@ const int maxBufferSize = 10;
 float smoothBuffer[maxBufferSize];
 bool bufferFull = false;
 int bufferIndex = 0;
+float zMA;
 
 // Define for the LEDS
 #define GREEN 0
@@ -248,7 +249,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         smoothBuffer[bufferIndex] = (static_cast<float>(aaWorld.z) / 4096);
         increaseBufferIndex();
         if(bufferFull){
-          float zMA = averageBuffer();
+          zMA = averageBuffer();
         }
 
         // World z smoothing using W
