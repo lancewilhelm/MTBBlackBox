@@ -64,7 +64,7 @@ int bInvert = 0;
 //smoothing variables, weighted approach
 float zWorld0 = 1;
 float dt = (1.0/100);
-float RC = 0.15;
+float RC = 0.50;
 float alpha = dt / (RC + dt);
 
 //smoothing using moving average
