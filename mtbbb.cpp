@@ -61,19 +61,6 @@ int iOLEDType = OLED_128x64; // Change this for your specific display
 int bFlip = 0;
 int bInvert = 0;
 
-//smoothing variables, weighted approach
-float zWorld0 = 1;
-float dt = (1.0/100);
-float RC = 0.1;
-float alpha = dt / (RC + dt);
-
-//smoothing using moving average
-const int maxBufferSize = 10;
-float smoothBuffer[maxBufferSize];
-bool bufferFull = false;
-int bufferIndex = 0;
-float zMA;
-
 // Define for the LEDS
 #define GREEN 0
 #define RED 1
@@ -159,9 +146,9 @@ void setup() {
     mpu.setYGyroOffset(-51);
     mpu.setZGyroOffset(-68);
 
-    // trying the lowpass filter again
+    // Lowpass filter at 5 Hz
     mpu.setDLPFMode(6);
-    
+
     std::cout << std::endl << mpu.getDLPFMode() << std::endl;
     // make sure it worked (returns 0 if so)
     if (devStatus == 0) {
@@ -250,17 +237,6 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
         mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
 
-        // World z moothing using MA
-        smoothBuffer[bufferIndex] = (static_cast<float>(aaWorld.z) / 4096);
-        increaseBufferIndex();
-        if(bufferFull){
-          zMA = averageBuffer();
-        }
-
-        // World z smoothing using W
-        float zW = (alpha * (static_cast<float>(aaWorld.z) / 4096)) + ((1.0 - alpha) * zWorld0);
-        zWorld0 = zW;
-
         // Yaw Pitch Roll
         std::cout << std::fixed << std::setprecision(2) << "ypr: " << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << std::endl;
         myfile << std::fixed << std::setprecision(2) << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << ",";
@@ -270,7 +246,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 
         // display initial world-frame acceleration, adjusted to remove gravity
         // and rotated based on known orientation from quaternion
-        myfile << (static_cast<float>(aaWorld.x) / 4096) << "," << (static_cast<float>(aaWorld.y) / 4096) << "," << (static_cast<float>(aaWorld.z) / 4096) << "," << zMA << "," << zW << ",";
+        myfile << (static_cast<float>(aaWorld.x) / 4096) << "," << (static_cast<float>(aaWorld.y) / 4096) << "," << (static_cast<float>(aaWorld.z) / 4096) << ",";
 
         // Display and wriet the GPS data
         timestamp_t ts { gpsd_data->fix.time };
@@ -370,7 +346,7 @@ int main() {
     os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
     std::string filename = os.str();
     myfile.open (filename);
-    myfile << "t,pitch,roll,aworldX,aworldY,aworldZ,zMA,zW,gpstime,lat,lon,speed,alt,overflow\n";
+    myfile << "t,pitch,roll,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt,overflow\n";
 
     // Initialize GPS
     gpsmm gps_rec("localhost", DEFAULT_GPSD_PORT);
