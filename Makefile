@@ -1,7 +1,7 @@
 # Basic Variables
 CC = g++
 CFLAGS= -Wall -O2
-LDFLAGS = -lm -lwiringPi -loled96 -lpthread -libgps
+LDFLAGS = -lm -lwiringPi -loled96 -lpthread
 
 # List of Sources
 SOURCES = mtbbb.cpp I2Cdev.cpp MPU6050.cpp
