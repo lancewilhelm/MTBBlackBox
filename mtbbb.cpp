@@ -85,26 +85,6 @@ bool fileExists (const std::string& name) {
   return (stat (name.c_str(), &buffer) == 0);
 }
 
-float averageBuffer(){
-  float sum = 0;
-  for(int i = 0; i < maxBufferSize; i++){
-    sum += smoothBuffer[i];
-  }
-
-  float average = sum/maxBufferSize;
-  return average;
-}
-
-void increaseBufferIndex(){
-  if(bufferIndex == 9){
-    bufferIndex = 0;
-    bufferFull = true;
-  }else{
-    bufferIndex += 1;
-  }
-  return;
-}
-
 // ------------------------ SETUP ----------------------
 void setup() {
 
