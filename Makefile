@@ -10,11 +10,11 @@ OBJECTS = $(SOURCES:.cpp=.o)
 # Name of Target
 EXECUTABLE = mtbbb
 
-CFLAGS += 'pkg-config --cflags libgps'
-LDFLAGS += 'pkg-config --libs libgps'
+# Pkg Config
+PKG = `pkg-config --cflags --libs libgps`
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJECTS) -o $@
+	$(CC) $(CFLAGS) $(PKG) $(LDFLAGS) $(OBJECTS) -o $@
 
 $(OBJECTS): $(SOURCES)
 	$(CC) -c $(SOURCES)
