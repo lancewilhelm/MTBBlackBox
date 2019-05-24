@@ -1,6 +1,6 @@
 # Basic Variables
 CC = g++
-CFLAGS= -c -Wall -O2
+CFLAGS= -Wall -O2
 LDFLAGS = -lm -lwiringPi -loled96 -lpthread -libgps
 
 # List of Sources
@@ -17,7 +17,7 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(CFLAGS) $(PKG) $(LDFLAGS) $(OBJECTS) -o $@
 
 $(OBJECTS): $(SOURCES)
-	$(CC) -c $(SOURCES)
+	$(CC) -c $(CFLAGS) $(SOURCES)
 
 clean:
 	rm -f $(OBJECTS) $(EXECUTABLE)
