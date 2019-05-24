@@ -220,7 +220,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
     // debugging
     fifoOverflow = fifoCount;
 
-    if (fifoCount == 2048) {
+    if (fifoCount == 10000) {
         // reset so we can continue cleanly
         mpu.resetFIFO();
         std::cout << "FIFO overflow!" << std::endl;
