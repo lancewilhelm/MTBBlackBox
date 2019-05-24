@@ -1,6 +1,6 @@
 # Basic Variables
 CC = g++
-CFLAGS=-c -Wall -O2
+CFLAGS= -c -Wall -O2
 LDFLAGS =
 
 # List of Sources
@@ -13,13 +13,11 @@ EXECUTABLE = mtbbb
 CFLAGS += 'pkg-config --cflags -libgps'
 LDFLAGS += 'pkg-config --libs libgps'
 
-all: $(SOURCES) $(EXECUTABLE)
-
 $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(OBJECTS) -o $@ $(LDFLAGS)
 
-.cpp.o:
-	$(CC) $(CFLAGS) $< -o $@
+$(OBJECTS): $(SOURCES)
+	$(CC) -c $(SOURCES)
  
 clean:
 	rm $(OBJECTS) $(EXECUTABLE)
