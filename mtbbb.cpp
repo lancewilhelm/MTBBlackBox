@@ -159,6 +159,8 @@ void setup() {
     mpu.setYGyroOffset(-51);
     mpu.setZGyroOffset(-68);
 
+
+    std::cout << std::endl << mpu.getDLPFMode() << std::endl;
     // make sure it worked (returns 0 if so)
     if (devStatus == 0) {
         // turn on the DMP, now that it's ready
@@ -303,15 +305,15 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           std::string maxGLine = "Max G: [" + posMaxGStr + "," + negMaxGStr +"]";
 
           // display current GPS state
-          // if(seconds == 0){
-          //   oledWriteString(0,0,"GPS NL");
-          //   oledWriteString(13,0,oled_time_str);
-          // } else {
-          //   oledWriteString(0,0,"GPS   ");
-          //   oledWriteString(13,0,oled_time_str);
-          //   oledWriteString(0,3,maxSpeedLine);
-          //   oledWriteString(0,4,maxGLine);
-          // }
+          if(seconds == 0){
+            oledWriteString(0,0,"GPS NL");
+            oledWriteString(13,0,oled_time_str);
+          } else {
+            oledWriteString(0,0,"GPS   ");
+            oledWriteString(13,0,oled_time_str);
+            oledWriteString(0,3,maxSpeedLine);
+            oledWriteString(0,4,maxGLine);
+          }
 
         }
 
