@@ -17,7 +17,7 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(CFLAGS) $(PKG) -o $@ $(OBJECTS) $(LDFLAGS)
 
 I2Cdev.o: I2Cdev.cpp
-	$(CC) -c -o I2Cdev.o i2cdev.cpp
+	$(CC) -c -o I2Cdev.o I2Cdev.cpp
 
 MPU6050.o: MPU6050.cpp
 	$(CC) -c -o MPU6050.o MPU6050.cpp
