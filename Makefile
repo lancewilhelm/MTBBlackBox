@@ -4,7 +4,7 @@ CFLAGS= -Wall -O2
 LDFLAGS = -lm -lwiringPi -loled96 -lpthread
 
 # List of Sources
-SOURCES = mtbbb.cpp I2Cdev.cpp MPU6050.cpp
+SOURCES = I2Cdev.cpp MPU6050.cpp mtbbb.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
 # Name of Target
@@ -17,7 +17,7 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(CFLAGS) $(PKG) -o $@ $(OBJECTS) $(LDFLAGS)
 
 I2Cdev.o: I2Cdev.cpp
-	$(CC) -c -o I2Cdev.o I2Cedec.cpp
+	$(CC) -c -o I2Cdev.o i2cdev.cpp
 
 MPU6050.o: MPU6050.cpp
 	$(CC) -c -o MPU6050.o MPU6050.cpp
