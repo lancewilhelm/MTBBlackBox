@@ -303,15 +303,15 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           std::string maxGLine = "Max G: [" + posMaxGStr + "," + negMaxGStr +"]";
 
           // display current GPS state
-          if(seconds == 0){
-            oledWriteString(0,0,"GPS NL");
-            oledWriteString(13,0,oled_time_str);
-          } else {
-            oledWriteString(0,0,"GPS   ");
-            oledWriteString(13,0,oled_time_str);
-            oledWriteString(0,3,maxSpeedLine);
-            oledWriteString(0,4,maxGLine);
-          }
+          // if(seconds == 0){
+          //   oledWriteString(0,0,"GPS NL");
+          //   oledWriteString(13,0,oled_time_str);
+          // } else {
+          //   oledWriteString(0,0,"GPS   ");
+          //   oledWriteString(13,0,oled_time_str);
+          //   oledWriteString(0,3,maxSpeedLine);
+          //   oledWriteString(0,4,maxGLine);
+          // }
 
         }
 
@@ -319,12 +319,12 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         std::setprecision(6);
         std::cout.setf(std::ios::fixed, std::ios::floatfield);
         //std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
-        // if(seconds == 0 || newGPSData == false){
-        //   myfile << "," << "," << "," << "," << ","; // << std::endl;
-        // } else {
-        //   myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << ","; // << std::endl;
-        //   newGPSData = false;
-        // }
+        if(seconds == 0 || newGPSData == false){
+          myfile << "," << "," << "," << "," << ","; // << std::endl;
+        } else {
+          myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << ","; // << std::endl;
+          newGPSData = false;
+        }
 
         myfile << fifoOverflow << std::endl;
 
