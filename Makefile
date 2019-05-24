@@ -1,7 +1,7 @@
 # Basic Variables
 CC = g++
 CFLAGS= -c -Wall -O2
-LDFLAGS = -lm -lwiringPi -loled96 -lpthread
+LDFLAGS = -lm -lwiringPi -loled96 -lpthread -libgps
 
 # List of Sources
 SOURCES = mtbbb.cpp I2Cdev.cpp MPU6050.cpp
@@ -10,11 +10,11 @@ OBJECTS = $(SOURCES:.cpp=.o)
 # Name of Target
 EXECUTABLE = mtbbb
 
-CFLAGS += 'pkg-config --cflags -libgps'
+CFLAGS += 'pkg-config --cflags libgps'
 LDFLAGS += 'pkg-config --libs libgps'
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(CFLAGS) $(OBJECTS) -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJECTS) -o $@
 
 $(OBJECTS): $(SOURCES)
 	$(CC) -c $(SOURCES)
