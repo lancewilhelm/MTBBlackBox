@@ -16,8 +16,14 @@ PKG = `pkg-config --cflags --libs libgps`
 $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(CFLAGS) $(PKG) -o $@ $(OBJECTS) $(LDFLAGS)
 
-$(OBJECTS): $(SOURCES)
-	$(CC) -c $(CFLAGS) $(SOURCES)
+I2Cdev.o: I2Cdev.cpp
+	$(CC) -c -o I2Cdev.o I2Cedec.cpp
+
+MPU6050.o: MPU6050.cpp
+	$(CC) -c -o MPU6050.o MPU6050.cpp
+
+mtbbb.o: mtbbb.cpp
+	$(CC) -c -o mtbbb.o mtbbb.cpp
 
 clean:
 	rm -f $(OBJECTS) $(EXECUTABLE)
