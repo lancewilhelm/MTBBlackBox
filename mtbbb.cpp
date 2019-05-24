@@ -159,7 +159,9 @@ void setup() {
     mpu.setYGyroOffset(-51);
     mpu.setZGyroOffset(-68);
 
-
+    // trying the lowpass filter again
+    mpu.setDLPFMode(6);
+    
     std::cout << std::endl << mpu.getDLPFMode() << std::endl;
     // make sure it worked (returns 0 if so)
     if (devStatus == 0) {
