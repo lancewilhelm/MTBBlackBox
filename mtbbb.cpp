@@ -161,8 +161,8 @@ void setup() {
     mpu.setYGyroOffset(-51);
     mpu.setZGyroOffset(-68);
 
-    std::cout << std::endl << "DLPF Mode: " << std::to_string(mpu.getDLPFMode()) << std::endl;
     mpu.setDLPFMode(DLPFMode);
+    std::cout << std::endl << "DLPF Mode: " << std::to_string(mpu.getDLPFMode()) << std::endl;
     std::cout << "Sample Rate: " << std::to_string(mpu.getRate()) << std::endl;
     // make sure it worked (returns 0 if so)
     if (devStatus == 0) {
