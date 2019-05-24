@@ -14,7 +14,7 @@ EXECUTABLE = mtbbb
 PKG = `pkg-config --cflags --libs libgps`
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(CFLAGS) $(PKG) $(LDFLAGS) $(OBJECTS) -o $@
+	$(CC) $(CFLAGS) $(PKG) -o $@ $(OBJECTS) $(LDFLAGS)
 
 $(OBJECTS): $(SOURCES)
 	$(CC) -c $(CFLAGS) $(SOURCES)
