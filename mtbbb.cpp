@@ -160,7 +160,7 @@ void setup() {
     mpu.setZGyroOffset(-68);
 
     // Set lowpass filter to lowest setting
-    mpu.setDLPFMode(6);
+    mpu.setDLPFMode(5);
     std::cout << std::endl << "DLPF Mode: " << std::to_string(mpu.getDLPFMode()) << std::endl;
     std::cout << "Sample Rate: " << std::to_string(mpu.getRate()) << std::endl;
     // make sure it worked (returns 0 if so)
@@ -220,7 +220,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
     // debugging
     fifoOverflow = fifoCount;
 
-    if (fifoCount == 10000) {
+    if (fifoCount == 1024) {
         // reset so we can continue cleanly
         mpu.resetFIFO();
         std::cout << "FIFO overflow!" << std::endl;
