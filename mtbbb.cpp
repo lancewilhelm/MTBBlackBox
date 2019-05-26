@@ -131,6 +131,7 @@ void setup() {
     mpu.setDLPFMode(6);
     mpu.setFullScaleGyroRange(0);
     std::cout << "Gyro Setting: " << std::to_string(mpu.getFullScaleGyroRange()) << std::endl;
+    std::cout << "Rate: " << std::to_string(mpu.getRate()) << std::endl;
 
     std::cout << std::endl << mpu.getDLPFMode() << std::endl;
     // make sure it worked (returns 0 if so)
