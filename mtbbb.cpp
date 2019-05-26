@@ -212,7 +212,6 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         // Gather data from dmp
         mpu.dmpGetQuaternion(&q, fifoBuffer);
         mpu.dmpGetAccel(&aa, fifoBuffer);
-        mpu.dmpGetGyro(gy, fifoBuffer);
         mpu.dmpGetGravity(&gravity, &q);
         mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
         mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
