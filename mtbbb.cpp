@@ -222,12 +222,12 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
 
         // Yaw Pitch Roll
-        std::cout << std::fixed << std::setprecision(2) << "ypr: " << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << std::endl;
+        std::cout << std::fixed << std::setprecision(2) << "ypr: " << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI);
         myfile << std::fixed << std::setprecision(2) << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << ",";
 
         // Gryo
-        std::cout << std::fixed << std::setprecision(2) << "gyro: " << gy[0] << "," << gy[1] << "," << gy[2] << std::endl;
-        myfile << std::fixed << std::setprecision(2) << gy[0] << "," << gy[1] << "," << gy[2] << ",";
+        std::cout << std::fixed << std::setprecision(2) << " gyro: " << (gy[0]/180*M_PI) << "," << (gy[1]/180*M_PI) << "," << (gy[2]/180*M_PI) << std::endl;
+        myfile << std::fixed << std::setprecision(2) << (gy[0]/180*M_PI) << "," << (gy[1]/180*M_PI) << "," << (gy[2]/180*M_PI) << ",";
 
         // display real acceleration, adjusted to remove gravity
         // myfile << (static_cast<float>(aaReal.x) / 4096) << "," << (static_cast<float>(aaReal.y) / 4096) << "," << (static_cast<float>(aaReal.z) / 4096) << ",";
