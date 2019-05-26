@@ -37,7 +37,6 @@ uint8_t fifoBuffer[64]; // FIFO storage buffer
 Quaternion q;           // [w, x, y, z]         quaternion container
 VectorInt16 aa;         // [x, y, z]            accel sensor measurements
 VectorInt16 aaReal;     // [x, y, z]            gravity-free accel
-int gy[3];         // [x, y, z]            gyro reading sensor measurements
 VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
 VectorFloat gravity;    // [x, y, z]            gravity vector
 float euler[3];         // [psi, theta, phi]    Euler angle container
@@ -129,9 +128,6 @@ void setup() {
 
     // Lowpass filter at 5 Hz
     mpu.setDLPFMode(6);
-    mpu.setFullScaleGyroRange(0);
-    std::cout << "Gyro Setting: " << std::to_string(mpu.getFullScaleGyroRange()) << std::endl;
-    std::cout << "Rate: " << std::to_string(mpu.getRate()) << std::endl;
 
     std::cout << std::endl << mpu.getDLPFMode() << std::endl;
     // make sure it worked (returns 0 if so)
@@ -225,10 +221,6 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         // Yaw Pitch Roll
         std::cout << std::fixed << std::setprecision(2) << "ypr: " << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI);
         myfile << std::fixed << std::setprecision(2) << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << ",";
-
-        // Gryo
-        std::cout << std::fixed << std::setprecision(2) << " gyro: " << (gy[0]/180*M_PI) << "," << (gy[1]/180*M_PI) << "," << (gy[2]/180*M_PI) << std::endl;
-        myfile << std::fixed << std::setprecision(2) << (gy[0]/180*M_PI) << "," << (gy[1]/180*M_PI) << "," << (gy[2]/180*M_PI) << ",";
 
         // display real acceleration, adjusted to remove gravity
         // myfile << (static_cast<float>(aaReal.x) / 4096) << "," << (static_cast<float>(aaReal.y) / 4096) << "," << (static_cast<float>(aaReal.z) / 4096) << ",";
@@ -335,7 +327,7 @@ int main() {
     os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
     std::string filename = os.str();
     myfile.open (filename);
-    myfile << "t,yaw,pitch,roll,gyroX,gyroY,gyroZ,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt,overflow\n";
+    myfile << "t,yaw,pitch,roll,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt,overflow\n";
 
     // Initialize GPS
     gpsmm gps_rec("localhost", DEFAULT_GPSD_PORT);
