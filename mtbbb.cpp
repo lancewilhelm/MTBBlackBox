@@ -218,7 +218,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
 
         // Yaw Pitch Roll
-        std::cout << std::fixed << std::setprecision(2) << "ypr: " << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI);
+        // std::cout << std::fixed << std::setprecision(2) << "ypr: " << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << std::endl;
         myfile << std::fixed << std::setprecision(2) << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << ",";
 
         // display real acceleration, adjusted to remove gravity
