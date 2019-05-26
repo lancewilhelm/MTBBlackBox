@@ -129,6 +129,7 @@ void setup() {
 
     // Lowpass filter at 5 Hz
     mpu.setDLPFMode(6);
+    mpu.setFullScaleGyroRange(0);
     std::cout << "Gyro Setting: " << std::to_string(mpu.getFullScaleGyroRange()) << std::endl;
 
     std::cout << std::endl << mpu.getDLPFMode() << std::endl;
