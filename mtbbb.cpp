@@ -75,6 +75,7 @@ float jumpEventMaxTime;
 float jumpEventMaxVal = 0;
 float hangtime;
 float maxHangtime = 0;
+std::string maxHangtimeStr;
 
 // Buffer for data writing. This is necessary for live derivative.
 struct bufferNode{
@@ -147,6 +148,9 @@ void calculateJump(){
   // Update maxHangtime if necessary
   if (hangtime > maxHangtime){
     maxHangtime = hangtime;
+    std::ostringstream stream;
+    stream << std::fixed << std::setprecision(2) << maxHangtime;
+    maxHangtimeStr = stream.str();
   }
 
   // reset the variables
@@ -156,7 +160,7 @@ void calculateJump(){
 
 } // end calculateJump()
 
-void createJumpNode(float time, bool max){
+void createJumpNode(float time, bool max, std::ofstream &myfile){
   std::cout << "JUMP NODE" << std::endl;
   jumpNode *temp = new jumpNode;
   temp -> t = time;
@@ -178,6 +182,7 @@ void createJumpNode(float time, bool max){
   if (possibleJumpEvent && temp->max == true){
     std::cout << "CALC JUMP" << std::endl;
     calculateJump();
+    myfile << numberOfJumps << "," << hangtime << std::endl;
   }
 } // end creatJumpNode()
 
@@ -436,9 +441,11 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         // Jump calculations if full buffer
         if(fifth != NULL){
           if(fourth->daccZ > 0 && third->daccZ <= 0 && third->accZ > jumpMaxThreshold){
-            createJumpNode(duration.count(),true);  // jump maximum (takeoff)
+            createJumpNode(duration.count(),true,myfile);  // jump maximum (takeoff)
           } else if (fourth->daccZ < 0 && third->daccZ >= 0 && third->accZ < jumpMinThreshold){
-            createJumpNode(duration.count(),false); // jump minimum (landing)
+            createJumpNode(duration.count(),false,myfile); // jump minimum (landing)
+          } else {
+            myfile << ',' << std::endl;
           }
         }
 
@@ -447,7 +454,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 
           std::string maxSpeedLine = "Max Sp: " + maxSpeedStr;
           std::string jumpLine = "Jumps: " + std::to_string(numberOfJumps);
-          std::string hangtimeLine = "Max Hang: " + std::to_string(maxHangtime);
+          std::string hangtimeLine = "Max Hang: " + maxHangtimeStr;
 
           // display current GPS state
           if(seconds == 0){
