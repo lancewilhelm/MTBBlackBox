@@ -36,7 +36,7 @@ uint8_t fifoBuffer[64]; // FIFO storage buffer
 // orientation/motion vars
 Quaternion q;           // [w, x, y, z]         quaternion container
 VectorInt16 aa;         // [x, y, z]            accel sensor measurements
-VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
+VectorInt16 aaReal;     // [x, y, z]            gravity-free accel
 VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
 VectorFloat gravity;    // [x, y, z]            gravity vector
 float euler[3];         // [psi, theta, phi]    Euler angle container
@@ -61,18 +61,41 @@ int iOLEDType = OLED_128x64; // Change this for your specific display
 int bFlip = 0;
 int bInvert = 0;
 
-//smoothing variables, weighted approach
-float zWorld0 = 1;
-float dt = (1.0/100);
-float RC = 0.1;
-float alpha = dt / (RC + dt);
+//stuff for continuous running
+bool runLoop = true;
 
-//smoothing using moving average
-const int maxBufferSize = 10;
-float smoothBuffer[maxBufferSize];
-bool bufferFull = false;
-int bufferIndex = 0;
-float zMA;
+//device default orrientation offsets
+float pitchOffset = 27.21; // deg
+float rollOffset = 0; // deg
+
+// Buffer for data writing. This is necessary for live derivative.
+struct node{
+  float t, yaw, pitch, roll, accX, accY, accZ;
+  node *next;
+};
+
+node *first = NULL;
+node *second = NULL;
+node *third = NULL;
+node *fourth = NULL;
+node *fifth = NULL;
+
+void createNode(float time){
+  node *temp = new node;
+  temp -> t = time;
+  temp -> yaw = (ypr[0] * 180/M_PI);
+  temp -> pitch = ((ypr[1] * 180/M_PI) - pitchOffset);
+  temp -> roll = ((ypr[2] * 180/M_PI) - rollOffset);
+  temp -> accX = (static_cast<float>(aaWorld.x) / 4096);
+  temp -> accY = (static_cast<float>(aaWorld.y) / 4096);
+  temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
+
+  fifth = fourth;
+  fourth = third;
+  third = second;
+  second = first;
+  first = temp;
+}
 
 // Define for the LEDS
 #define GREEN 0
@@ -80,10 +103,10 @@ float zMA;
 #define BUTTON 4
 
 // ================================================================
-// ===                      INITIAL SETUP                       ===
+// ===                      FUNCTIONS                           ===
 // ================================================================
 
-void signalHandler( int signum ) {
+void signalHandler(int signum) {
    std::cout << "Interrupt signal (" << signum << ") received.\n";
 
    // cleanup and close up stuff here
@@ -98,26 +121,52 @@ bool fileExists (const std::string& name) {
   return (stat (name.c_str(), &buffer) == 0);
 }
 
-float averageBuffer(){
-  float sum = 0;
-  for(int i = 0; i < maxBufferSize; i++){
-    sum += smoothBuffer[i];
-  }
+void setOffsets(){
+  bool finished = false;
 
-  float average = sum/maxBufferSize;
-  return average;
-}
+  oledFill(0x00); // Clear the screen
+  oledWriteString(2,0,"GETTING OFFSETS...");
 
-void increaseBufferIndex(){
-  if(bufferIndex == 9){
-    bufferIndex = 0;
-    bufferFull = true;
-  }else{
-    bufferIndex += 1;
-  }
+  while(!finished){
+    // get current FIFO count
+    fifoCount = mpu.getFIFOCount();
+
+    if (fifoCount == 1024) {
+        // reset so we can continue cleanly
+        mpu.resetFIFO();
+    } else if (fifoCount >= 42) {
+        // read a packet from FIFO
+        mpu.getFIFOBytes(fifoBuffer, packetSize);
+
+        // Gather data from dmp
+        mpu.dmpGetQuaternion(&q, fifoBuffer);
+        mpu.dmpGetAccel(&aa, fifoBuffer);
+        mpu.dmpGetGravity(&gravity, &q);
+        mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+
+        // Set offsets
+        pitchOffset = (ypr[1] * 180/M_PI);
+        rollOffset = (ypr[2] * 180/M_PI);
+
+        finished = true;
+    } //end if(fifocount)
+  } //end while(!finished)
+
+  // Display offsets on screen
+  std::string pitchOffsetLine = "Pitch: " + std::to_string(pitchOffset);
+  std::string rollOffsetLine = "Roll: " + std::to_string(rollOffset);
+  oledWriteString(2,2,pitchOffsetLine);
+  oledWriteString(2,3,rollOffsetLine);
+  delay(5000);
   return;
+} //end setOffsets()
+
+float dPitch(){
+  float dPitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
+  return dPitch;
 }
 
+// ------------------------ SETUP ----------------------
 void setup() {
 
     // OLED Init
@@ -158,6 +207,10 @@ void setup() {
     mpu.setYGyroOffset(-51);
     mpu.setZGyroOffset(-68);
 
+    // Lowpass filter at 5 Hz
+    mpu.setDLPFMode(6);
+
+    std::cout << std::endl << mpu.getDLPFMode() << std::endl;
     // make sure it worked (returns 0 if so)
     if (devStatus == 0) {
         // turn on the DMP, now that it's ready
@@ -183,7 +236,11 @@ void setup() {
         std::cout << "DMP Initialization failed code: " << devStatus << std::endl;
     }
 
-}
+    // if button is still pressed, calibrate offsets
+    if(digitalRead(BUTTON) == HIGH){
+      setOffsets();
+    }
+} //end setup()
 
 // ================================================================
 // ===                    MAIN PROGRAM LOOP                     ===
@@ -224,7 +281,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         digitalWrite(GREEN, HIGH);
 
     // otherwise, check for DMP data ready interrupt (this should happen frequently)
-  } else if (fifoCount >= 42 && gpsd_data != NULL) {
+    } else if (fifoCount >= 42 && gpsd_data != NULL) {
         // read a packet from FIFO
         mpu.getFIFOBytes(fifoBuffer, packetSize);
         //mpu.resetFIFO();
@@ -245,27 +302,28 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
         mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
 
-        // World z moothing using MA
-        smoothBuffer[bufferIndex] = (static_cast<float>(aaWorld.z) / 4096);
-        increaseBufferIndex();
-        if(bufferFull){
-          zMA = averageBuffer();
+        // Add to buffer
+        createNode(duration.count());
+
+        // Display as long as the buffer is full
+        if(fifth != NULL){
+          // YPR
+          std::cout << std::fixed << std::setprecision(2) << "ypdr: " << third->yaw << "," << third->pitch << "," << dPitch() << "," << third->roll << std::endl;
+          myfile << std::fixed << std::setprecision(2) << third->yaw << "," << third->pitch << "," << dPitch() << "," << third->roll << ",";
+
+          // Acc
+          myfile << third->accX << "," << third->accY << "," << third->accZ << ",";
+        } else {
+          myfile << "," << "," << "," << "," << "," << "," << ",";
         }
 
-        // World z smoothing using W
-        float zW = (alpha * (static_cast<float>(aaWorld.z) / 4096)) + ((1.0 - alpha) * zWorld0);
-        zWorld0 = zW;
-
         // Yaw Pitch Roll
-        std::cout << std::fixed << std::setprecision(2) << "ypr: " << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << std::endl;
-        myfile << std::fixed << std::setprecision(2) << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << ",";
+        // std::cout << std::fixed << std::setprecision(2) << "ypr: " << (ypr[0] * 180/M_PI) << "," << ((ypr[1] * 180/M_PI) - pitchOffset) << "," << ((ypr[2] * 180/M_PI) - rollOffset) << std::endl;
+        // myfile << std::fixed << std::setprecision(2) << (ypr[0] * 180/M_PI) << "," << ((ypr[1] * 180/M_PI) - pitchOffset) << "," << ((ypr[2] * 180/M_PI) - rollOffset) << ",";
 
-        // display real acceleration, adjusted to remove gravity
-        // myfile << (static_cast<float>(aaReal.x) / 4096) << "," << (static_cast<float>(aaReal.y) / 4096) << "," << (static_cast<float>(aaReal.z) / 4096) << ",";
-
-        // display initial world-frame acceleration, adjusted to remove gravity
-        // and rotated based on known orientation from quaternion
-        myfile << (static_cast<float>(aaWorld.x) / 4096) << "," << (static_cast<float>(aaWorld.y) / 4096) << "," << (static_cast<float>(aaWorld.z) / 4096) << "," << zMA << "," << zW << ",";
+        // // display initial world-frame acceleration, adjusted to remove gravity
+        // // and rotated based on known orientation from quaternion
+        // myfile << (static_cast<float>(aaWorld.x) / 4096) << "," << (static_cast<float>(aaWorld.y) / 4096) << "," << ((static_cast<float>(aaWorld.z) / 4096) - 1) << ",";
 
         // Display and wriet the GPS data
         timestamp_t ts { gpsd_data->fix.time };
@@ -350,7 +408,7 @@ int main() {
 
     // Setup the MPU6050 stuff
     setup();
-    usleep(100000);   // This is important I think...
+    usleep(100000);   // Sleep for 0.1 s. This is important I think...
 
     // Start the clock for time purposes
     std::chrono::time_point<std::chrono::high_resolution_clock> t0, t1;
@@ -365,7 +423,7 @@ int main() {
     os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
     std::string filename = os.str();
     myfile.open (filename);
-    myfile << "t,pitch,roll,aworldX,aworldY,aworldZ,zMA,zW,gpstime,lat,lon,speed,alt,overflow\n";
+    myfile << "t,yaw,pitch,dpitch,roll,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt,overflow\n";
 
     // Initialize GPS
     gpsmm gps_rec("localhost", DEFAULT_GPSD_PORT);
@@ -376,39 +434,81 @@ int main() {
     }
 
     // Clear display before starting
-    oledFill(0x00); // Clear the screen
+    oledFill(0x00);
 
-    for (;;){
-      // Run the main loop
-      loop(myfile, t0, t1, gps_rec);
+    //-----------------------------------------------------------
+    //                         Main Loop
+    //-----------------------------------------------------------
+    while(true){
+      if (runLoop){
+        // Run the main loop
+        loop(myfile, t0, t1, gps_rec);
 
-      // Check for button press. Exit loop if pressed
-      if(digitalRead(BUTTON) == HIGH){
+        // Check for button press. End program
+        if(digitalRead(BUTTON) == HIGH){
+          oledWriteString(2,7,"Ending MTBBB....");
 
-        oledWriteString(2,7,"Ending MTBBB....");
+          // Close the file
+          myfile.close();
 
-        break;
-      }
-    }
+          // Signal the end of the program
+          digitalWrite(RED, HIGH);
+          digitalWrite(GREEN, LOW);
+          delay(500);
+          digitalWrite(RED, LOW);
+          delay(500);
+          digitalWrite(RED, HIGH);
+          delay(500);
+          digitalWrite(RED, LOW);
 
-    // Close the file
-    myfile.close();
+          // Check that the data file exists. THIS MAY NEED RETOUCHING
+          bool checkFile = fileExists(filename);
+          if(checkFile){
+            oledWriteString(2,1,"Data file exists!");
+          } else {
+            oledWriteString(4,1,"NO DATA FILE!");
+          }
 
-    // Signal the end of the program
-    digitalWrite(RED, HIGH);
-    digitalWrite(GREEN, LOW);
-    delay(500);
-    digitalWrite(RED, LOW);
-    delay(500);
-    digitalWrite(RED, HIGH);
-    delay(500);
-    digitalWrite(RED, LOW);
+          // switch runLoop bool
+          runLoop = false;
 
-    bool checkFile = fileExists(filename);
-    if(checkFile){
-      oledWriteString(2,1,"Data file exists!");
-    } else {
-      oledWriteString(4,1,"NO DATA FILE!");
-    }
+        } // end if(Button==HIGH)
+      } else {
+        // Check for button press. Start program
+        if(digitalRead(BUTTON) == HIGH){
+          // Initialize new t0
+          t0 = std::chrono::high_resolution_clock::now();
+
+          // Initialize file for recording
+          std::ofstream myfile;
+
+          // Open the file and write header. May want to reconsider file naming
+          std::chrono::seconds timestamp = std::chrono::duration_cast< std::chrono::seconds >(std::chrono::system_clock::now().time_since_epoch());
+          std::ostringstream os;
+          os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
+          std::string filename = os.str();
+          myfile.open (filename);
+          myfile << "t,yaw,pitch,roll,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt,overflow\n";
+
+          // Clear display before starting
+          oledFill(0x00);
+          oledWriteString(2,0,"RESTARTING...");
+
+          // switch runLoop bool
+          runLoop = true;
+
+          // MANDATORY delay so as to not retrigger program stop immediately
+          delay(2000);
+
+          // if button is still pressed, calibrate offsets
+          if(digitalRead(BUTTON) == HIGH){
+            setOffsets();
+          }
+
+          oledFill(0x00); // clear screen
+        } // end if(Button==HIGH)
+      } // end if(runLoop), else
+    } // end while(true)
+
     return 0;
-}
+} // end main()
