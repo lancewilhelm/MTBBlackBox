@@ -78,7 +78,7 @@ float maxHangtime = 0;
 
 // Buffer for data writing. This is necessary for live derivative.
 struct bufferNode{
-  float t, yaw, pitch, roll, accX, accY, accZ;
+  float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ;
 };
 
 bufferNode *first = NULL;
@@ -96,6 +96,8 @@ void createBufferNode(float time){
   temp -> accX = (static_cast<float>(aaWorld.x) / 4096);
   temp -> accY = (static_cast<float>(aaWorld.y) / 4096);
   temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
+  temp -> dpitch = 0;
+  temp -> daccZ = 0;
 
   fifth = fourth;
   fourth = third;
