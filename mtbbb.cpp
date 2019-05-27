@@ -64,6 +64,10 @@ int bInvert = 0;
 //stuff for continuous running
 bool runLoop = true;
 
+//device orrientation offsets
+float pitchOffset = 27.21;
+float rollOffset = 0;
+
 // Define for the LEDS
 #define GREEN 0
 #define RED 1
@@ -73,7 +77,7 @@ bool runLoop = true;
 // ===                      FUNCTIONS                           ===
 // ================================================================
 
-void signalHandler( int signum ) {
+void signalHandler(int signum) {
    std::cout << "Interrupt signal (" << signum << ") received.\n";
 
    // cleanup and close up stuff here
@@ -87,6 +91,46 @@ bool fileExists (const std::string& name) {
   struct stat buffer;
   return (stat (name.c_str(), &buffer) == 0);
 }
+
+void setOffsets(){
+  bool finished = false;
+
+  oledFill(0x00); // Clear the screen
+  oledWriteString(2,0,"GETTING OFFSETS...");
+
+  while(!finished){
+    // get current FIFO count
+    fifoCount = mpu.getFIFOCount();
+
+    if (fifoCount == 1024) {
+        // reset so we can continue cleanly
+        mpu.resetFIFO();
+    } else if (fifoCount >= 42 && gpsd_data != NULL) {
+        // read a packet from FIFO
+        mpu.getFIFOBytes(fifoBuffer, packetSize)
+
+        // Gather data from dmp
+        mpu.dmpGetQuaternion(&q, fifoBuffer);
+        mpu.dmpGetAccel(&aa, fifoBuffer);
+        mpu.dmpGetGravity(&gravity, &q);
+        mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+
+        // Set offsets
+        pitchOffset = (ypr[1] * 180/M_PI);
+        rollOffset = (ypr[2] * 180/M_PI);
+
+        finished = true;
+    } //end if(fifocount)
+  } //end while(!finished)
+
+  // Display offsets on screen
+  std::string pitchOffsetLine = "Pitch: " + pitchOffset;
+  std::string rollOffsetLine = "Roll: " + rollOffset;
+  oledWriteString(2,2,pitchOffsetLine);
+  oledWriteString(2,3,rollOffsetLine);
+  delay(5000);
+  return;
+} //end setOffsets()
 
 // ------------------------ SETUP ----------------------
 void setup() {
@@ -158,7 +202,11 @@ void setup() {
         std::cout << "DMP Initialization failed code: " << devStatus << std::endl;
     }
 
-}
+    // if button is still pressed, calibrate offsets
+    if(digitalRead(BUTTON) == HIGH){
+      setOffsets();
+    }
+} //end setup()
 
 // ================================================================
 // ===                    MAIN PROGRAM LOOP                     ===
@@ -199,7 +247,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         digitalWrite(GREEN, HIGH);
 
     // otherwise, check for DMP data ready interrupt (this should happen frequently)
-  } else if (fifoCount >= 42 && gpsd_data != NULL) {
+    } else if (fifoCount >= 42 && gpsd_data != NULL) {
         // read a packet from FIFO
         mpu.getFIFOBytes(fifoBuffer, packetSize);
         //mpu.resetFIFO();
@@ -223,7 +271,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         // Yaw Pitch Roll
         // std::cout << std::fixed << std::setprecision(2) << "ypr: " << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << std::endl;
         // 27.21 subtraction for the downtube angle on my bike
-        myfile << std::fixed << std::setprecision(2) << (ypr[0] * 180/M_PI) << "," << ((ypr[1] * 180/M_PI) - 27.21) << "," << (ypr[2] * 180/M_PI) << ",";
+        myfile << std::fixed << std::setprecision(2) << (ypr[0] * 180/M_PI) << "," << ((ypr[1] * 180/M_PI) - pitchOffset) << "," << ((ypr[2] * 180/M_PI) - rollOffset) << ",";
 
         // display real acceleration, adjusted to remove gravity
         // myfile << (static_cast<float>(aaReal.x) / 4096) << "," << (static_cast<float>(aaReal.y) / 4096) << "," << (static_cast<float>(aaReal.z) / 4096) << ",";
@@ -406,6 +454,12 @@ int main() {
 
           // MANDATORY delay so as to not retrigger program stop immediately
           delay(2000);
+
+          // if button is still pressed, calibrate offsets
+          if(digitalRead(BUTTON) == HIGH){
+            setOffsets();
+          }
+
           oledFill(0x00); // clear screen
         } // end if(Button==HIGH)
       } // end if(runLoop), else
