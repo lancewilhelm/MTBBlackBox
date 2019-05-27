@@ -105,7 +105,7 @@ void setOffsets(){
     if (fifoCount == 1024) {
         // reset so we can continue cleanly
         mpu.resetFIFO();
-    } else if (fifoCount >= 42 && gpsd_data != NULL) {
+    } else if (fifoCount >= 42) {
         // read a packet from FIFO
         mpu.getFIFOBytes(fifoBuffer, packetSize)
 
