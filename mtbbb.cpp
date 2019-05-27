@@ -97,16 +97,17 @@ void createBufferNode(float time){
   temp -> accY = (static_cast<float>(aaWorld.y) / 4096);
   temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
 
-  if (fifth != NULL){
-    temp -> dpitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
-    temp -> daccZ = (first->accZ - fifth->accZ)/(first->t - fifth->t);
-  }
-
   fifth = fourth;
   fourth = third;
   third = second;
   second = first;
   first = temp;
+
+  if (fifth != NULL){
+    temp -> dpitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
+    temp -> daccZ = (first->accZ - fifth->accZ)/(first->t - fifth->t);
+  }
+  
 }
 
 struct jumpNode{
