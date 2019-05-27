@@ -154,8 +154,8 @@ void calculateJump(){
   }
 
   // reset the variables
-  float jumpEventMinVal = 0;
-  float jumpEventMaxVal = 0;
+  jumpEventMinVal = 0;
+  jumpEventMaxVal = 0;
   possibleJumpEvent = false;
 
 } // end calculateJump()
