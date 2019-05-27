@@ -128,7 +128,7 @@ void calculateJump(){
     if(temp->max && temp->accZ > jumpEventMaxVal){
       jumpEventMaxTime = temp->t;
       jumpEventMaxVal = temp->accZ;
-      std::cout << "FOUND MAX" << std::to_string(jumpEventMaxTime) << ", " << std::to_string(jumpEventMaxTime) << std::endl;
+      std::cout << "FOUND MAX " << std::to_string(jumpEventMaxTime) << ", " << std::to_string(jumpEventMaxTime) << std::endl;
       std::cout << "attempting to set next node" << std::endl;
       temp = temp->last;  //step to next node
       std::cout << "set next node" << std::endl;
@@ -386,7 +386,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         // Display as long as the buffer is full
         if(fifth != NULL){
           // YPR
-          std::cout << std::fixed << std::setprecision(2) << "ypdr: " << third->yaw << "," << third->pitch << "," << third->dpitch << "," << third->roll << std::endl;
+          // std::cout << std::fixed << std::setprecision(2) << "ypdr: " << third->yaw << "," << third->pitch << "," << third->dpitch << "," << third->roll << std::endl;
           myfile << std::fixed << std::setprecision(2) << third->yaw << "," << third->pitch << "," << third->dpitch << "," << third->roll << ",";
 
           // Acc
