@@ -78,7 +78,7 @@ float maxHangtime = 0;
 
 // Buffer for data writing. This is necessary for live derivative.
 struct bufferNode{
-  float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ;
+  float t, yaw, pitch, roll, accX, accY, accZ;
 };
 
 bufferNode *first = NULL;
@@ -109,7 +109,6 @@ void createBufferNode(float time){
   //   third -> dpitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
   //   third -> daccZ = (first->accZ - fifth->accZ)/(first->t - fifth->t);
   // }
-
 }
 
 struct jumpNode{
@@ -283,7 +282,6 @@ void setup() {
     // Lowpass filter at 5 Hz
     mpu.setDLPFMode(6);
 
-    std::cout << std::endl << mpu.getDLPFMode() << std::endl;
     // make sure it worked (returns 0 if so)
     if (devStatus == 0) {
         // turn on the DMP, now that it's ready
