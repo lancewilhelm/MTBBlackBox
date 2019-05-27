@@ -129,10 +129,12 @@ void calculateJump(){
       jumpEventMaxTime = temp->t;
       jumpEventMaxVal = temp->accZ;
       std::cout << "FOUND MAX " << std::to_string(jumpEventMaxTime) << ", " << std::to_string(jumpEventMaxTime) << std::endl;
-      std::cout << "attempting to set next node" << std::endl;
       temp = temp->last;  //step to next node
-      std::cout << "set next node" << std::endl;
-    } else if (temp->max && temp->accZ < jumpEventMaxVal || temp == NULL){
+    } else if (temp->max && temp->accZ < jumpEventMaxVal){
+      std::cout << "found a lesser max" << std::endl;
+      complete = true;
+    } else if (temp == NULL){
+      std::cout << "end of jump list" << std::endl;
       complete = true;
     } else {
       temp = temp->last;
