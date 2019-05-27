@@ -77,18 +77,18 @@ float hangtime;
 float maxHangtime = 0;
 
 // Buffer for data writing. This is necessary for live derivative.
-struct bufferNode{
+struct node{
   float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ;
 };
 
-bufferNode *first = NULL;
-bufferNode *second = NULL;
-bufferNode *third = NULL;
-bufferNode *fourth = NULL;
-bufferNode *fifth = NULL;
+node *first = NULL;
+node *second = NULL;
+node *third = NULL;
+node *fourth = NULL;
+node *fifth = NULL;
 
-void createBufferNode(float time){
-  bufferNode *temp = new bufferNode;
+void createnode(float time){
+  node *temp = new node;
   temp -> t = time;
   temp -> yaw = (ypr[0] * 180/M_PI);
   temp -> pitch = ((ypr[1] * 180/M_PI) - pitchOffset);
@@ -376,7 +376,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
 
         // Add to buffer
-        createBufferNode(duration.count());
+        createnode(duration.count());
 
         // Display as long as the buffer is full
         if(fifth != NULL){
