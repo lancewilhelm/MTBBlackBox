@@ -74,11 +74,11 @@ struct node{
   node *next;
 };
 
-node first = NULL;
-node second = NULL;
-node third = NULL;
-node fourth = NULL;
-node fifth = NULL;
+node *first = NULL;
+node *second = NULL;
+node *third = NULL;
+node *fourth = NULL;
+node *fifth = NULL;
 
 void createNode(float time){
   node *temp = new node;
