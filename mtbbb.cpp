@@ -163,7 +163,7 @@ void setOffsets(){
 
 float dPitch(){
   if(fifth == NULL){
-    return NULL;
+    return;
   } else {
 
   }
@@ -309,8 +309,10 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 
         std::cout << "Attempting to display YPR" << std::endl;
         // YPR
-        std::cout << std::fixed << std::setprecision(2) << "ypr: " << third->yaw << "," << third->pitch << "," << third->roll << std::endl;
-
+        if(fifth != NULL){
+          std::cout << std::fixed << std::setprecision(2) << "ypr: " << third->yaw << "," << third->pitch << "," << third->roll << std::endl;
+        }
+        
         // Yaw Pitch Roll
         // std::cout << std::fixed << std::setprecision(2) << "ypr: " << (ypr[0] * 180/M_PI) << "," << ((ypr[1] * 180/M_PI) - pitchOffset) << "," << ((ypr[2] * 180/M_PI) - rollOffset) << std::endl;
         // myfile << std::fixed << std::setprecision(2) << (ypr[0] * 180/M_PI) << "," << ((ypr[1] * 180/M_PI) - pitchOffset) << "," << ((ypr[2] * 180/M_PI) - rollOffset) << ",";
