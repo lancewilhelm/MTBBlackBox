@@ -126,10 +126,11 @@ void calculateJump(){
   bool complete = false;
   while(!complete){
     if(temp->max && temp->accZ > jumpEventMaxVal){
+      std::cout << "Found Max" << std::endl;
       jumpEventMaxTime = temp->t;
       jumpEventMaxVal = temp->accZ;
       temp = temp->last;  //step to next node
-    } else if (temp->max && temp->accZ < jumpEventMaxVal){
+    } else if (temp->max && temp->accZ < jumpEventMaxVal || temp == NULL){
       complete = true;
     }
   } // end while(!complete)
