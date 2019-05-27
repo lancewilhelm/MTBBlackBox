@@ -76,6 +76,39 @@ float jumpEventMaxVal = 0;
 float hangtime;
 float maxHangtime = 0;
 
+// Buffer for data writing. This is necessary for live derivative.
+struct bufferNode{
+  float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ;
+};
+
+bufferNode *first = NULL;
+bufferNode *second = NULL;
+bufferNode *third = NULL;
+bufferNode *fourth = NULL;
+bufferNode *fifth = NULL;
+
+void createBufferNode(float time){
+  bufferNode *temp = new bufferNode;
+  temp -> t = time;
+  temp -> yaw = (ypr[0] * 180/M_PI);
+  temp -> pitch = ((ypr[1] * 180/M_PI) - pitchOffset);
+  temp -> roll = ((ypr[2] * 180/M_PI) - rollOffset);
+  temp -> accX = (static_cast<float>(aaWorld.x) / 4096);
+  temp -> accY = (static_cast<float>(aaWorld.y) / 4096);
+  temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
+
+  if (fifth != NULL){
+    temp -> dpitch = dPitch();
+    temp -> daccZ = daworldZ();
+  }
+
+  fifth = fourth;
+  fourth = third;
+  third = second;
+  second = first;
+  first = temp;
+}
+
 // Calculation functions
 float dPitch(){
   float dPitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
@@ -149,39 +182,6 @@ void createJumpNode(float time, bool max){
     calculateJump();
   }
 } // end creatJumpNode()
-
-// Buffer for data writing. This is necessary for live derivative.
-struct bufferNode{
-  float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ;
-};
-
-bufferNode *first = NULL;
-bufferNode *second = NULL;
-bufferNode *third = NULL;
-bufferNode *fourth = NULL;
-bufferNode *fifth = NULL;
-
-void createBufferNode(float time){
-  bufferNode *temp = new bufferNode;
-  temp -> t = time;
-  temp -> yaw = (ypr[0] * 180/M_PI);
-  temp -> pitch = ((ypr[1] * 180/M_PI) - pitchOffset);
-  temp -> roll = ((ypr[2] * 180/M_PI) - rollOffset);
-  temp -> accX = (static_cast<float>(aaWorld.x) / 4096);
-  temp -> accY = (static_cast<float>(aaWorld.y) / 4096);
-  temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
-
-  if (fifth != NULL){
-    temp -> dpitch = dPitch();
-    temp -> daccZ = daworldZ();
-  }
-
-  fifth = fourth;
-  fourth = third;
-  third = second;
-  second = first;
-  first = temp;
-}
 
 // Define for the LEDS
 #define GREEN 0
