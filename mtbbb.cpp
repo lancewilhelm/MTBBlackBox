@@ -103,11 +103,12 @@ void createBufferNode(float time){
   second = first;
   first = temp;
 
+  std::cout << "attempt to calc dpitch and daccZ" << std::endl;
   if (fifth != NULL){
     temp -> dpitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
     temp -> daccZ = (first->accZ - fifth->accZ)/(first->t - fifth->t);
   }
-  
+
 }
 
 struct jumpNode{
