@@ -105,8 +105,8 @@ void createBufferNode(float time){
 
   std::cout << "attempt to calc dpitch and daccZ" << std::endl;
   if (fifth != NULL){
-    temp -> dpitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
-    temp -> daccZ = (first->accZ - fifth->accZ)/(first->t - fifth->t);
+    first-> dpitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
+    first -> daccZ = (first->accZ - fifth->accZ)/(first->t - fifth->t);
   }
 
 }
