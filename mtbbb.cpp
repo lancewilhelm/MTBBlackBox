@@ -61,6 +61,9 @@ int iOLEDType = OLED_128x64; // Change this for your specific display
 int bFlip = 0;
 int bInvert = 0;
 
+//stuff for continuous running
+bool runLoop = true;
+
 // Define for the LEDS
 #define GREEN 0
 #define RED 1
@@ -219,6 +222,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 
         // Yaw Pitch Roll
         // std::cout << std::fixed << std::setprecision(2) << "ypr: " << (ypr[0] * 180/M_PI) << "," << (ypr[1] * 180/M_PI) << "," << (ypr[2] * 180/M_PI) << std::endl;
+        // 27.21 subtraction for the downtube angle on my bike
         myfile << std::fixed << std::setprecision(2) << (ypr[0] * 180/M_PI) << "," << ((ypr[1] * 180/M_PI) - 27.21) << "," << (ypr[2] * 180/M_PI) << ",";
 
         // display real acceleration, adjusted to remove gravity
@@ -311,7 +315,7 @@ int main() {
 
     // Setup the MPU6050 stuff
     setup();
-    usleep(100000);   // This is important I think...
+    usleep(100000);   // Sleep for 0.1 s. This is important I think...
 
     // Start the clock for time purposes
     std::chrono::time_point<std::chrono::high_resolution_clock> t0, t1;
@@ -337,39 +341,70 @@ int main() {
     }
 
     // Clear display before starting
-    oledFill(0x00); // Clear the screen
+    oledFill(0x00);
 
-    for (;;){
-      // Run the main loop
-      loop(myfile, t0, t1, gps_rec);
+    //-----------------------------------------------------------
+    //                         Main Loop
+    //-----------------------------------------------------------
+    while(true){
+      if (runLoop){
+        // Run the main loop
+        loop(myfile, t0, t1, gps_rec);
 
-      // Check for button press. Exit loop if pressed
-      if(digitalRead(BUTTON) == HIGH){
+        // Check for button press. End program
+        if(digitalRead(BUTTON) == HIGH){
+          oledWriteString(2,7,"Ending MTBBB....");
 
-        oledWriteString(2,7,"Ending MTBBB....");
+          // Close the file
+          myfile.close();
 
-        break;
-      }
-    }
+          // Signal the end of the program
+          digitalWrite(RED, HIGH);
+          digitalWrite(GREEN, LOW);
+          delay(500);
+          digitalWrite(RED, LOW);
+          delay(500);
+          digitalWrite(RED, HIGH);
+          delay(500);
+          digitalWrite(RED, LOW);
 
-    // Close the file
-    myfile.close();
+          // Check that the data file exists. THIS MAY NEED RETOUCHING
+          bool checkFile = fileExists(filename);
+          if(checkFile){
+            oledWriteString(2,1,"Data file exists!");
+          } else {
+            oledWriteString(4,1,"NO DATA FILE!");
+          }
 
-    // Signal the end of the program
-    digitalWrite(RED, HIGH);
-    digitalWrite(GREEN, LOW);
-    delay(500);
-    digitalWrite(RED, LOW);
-    delay(500);
-    digitalWrite(RED, HIGH);
-    delay(500);
-    digitalWrite(RED, LOW);
+          // switch runLoop bool
+          runLoop = false;
 
-    bool checkFile = fileExists(filename);
-    if(checkFile){
-      oledWriteString(2,1,"Data file exists!");
-    } else {
-      oledWriteString(4,1,"NO DATA FILE!");
-    }
+        } // end if(Button==HIGH)
+      } else {
+        // Check for button press. Start program
+        if(digitalRead(BUTTON) == HIGH){
+          // Initialize new t0
+          t0 = std::chrono::high_resolution_clock::now();
+
+          // Initialize file for recording
+          std::ofstream myfile;
+
+          // Open the file and write header. May want to reconsider file naming
+          std::chrono::seconds timestamp = std::chrono::duration_cast< std::chrono::seconds >(std::chrono::system_clock::now().time_since_epoch());
+          std::ostringstream os;
+          os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
+          std::string filename = os.str();
+          myfile.open (filename);
+          myfile << "t,yaw,pitch,roll,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt,overflow\n";
+
+          // Clear display before starting
+          oledFill(0x00);
+
+          // switch runLoop bool
+          runLoop = true;
+        } // end if(Button==HIGH)
+      } // end if(runLoop), else
+    } // end while(true)
+
     return 0;
-}
+} // end main()
