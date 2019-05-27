@@ -51,10 +51,6 @@ int fifoOverflow = 0;
 //stuff for screen
 float maxSpeed = 0;
 std::string maxSpeedStr;
-float posMaxG = 0;
-float negMaxG = 0;
-std::string posMaxGStr;
-std::string negMaxGStr;
 int iChannel = 1;	// I2C bus 1
 int iOLEDAddr = 0x3c; // typical address; it can also be 0x3d
 int iOLEDType = OLED_128x64; // Change this for your specific display
@@ -68,20 +64,94 @@ bool runLoop = true;
 float pitchOffset = 27.21; // deg
 float rollOffset = 0; // deg
 
-// Buffer for data writing. This is necessary for live derivative.
-struct node{
-  float t, yaw, pitch, roll, accX, accY, accZ;
-  node *next;
+//jump setup
+int numberOfJumps = 0;
+float jumpMinThreshold = -2;
+float jumpMaxThreshold = 1;
+bool possibleJumpEvent = false;
+float jumpEventMinTime;
+float jumpEventMinVal = 0;
+float jumpEventMaxTime;
+float jumpEventMaxVal = 0;
+float hangtime;
+float maxHangtime = 0;
+
+struct jumpNode{
+  bool max; // if it's a max node this is true. False for min node.
+  float t, accZ;
+  jumpNode *last;
 };
 
-node *first = NULL;
-node *second = NULL;
-node *third = NULL;
-node *fourth = NULL;
-node *fifth = NULL;
+jumpNode *head = NULL;
 
-void createNode(float time){
-  node *temp = new node;
+void calculateJump(){
+  jumpNode *temp = new jumpNode;
+  temp = head->last;  //set our first node to the last one from head
+
+  bool complete = false;
+  while(!complete){
+    if(temp->max && temp->accZ > jumpEventMaxVal){
+      jumpEventMaxTime = temp->t;
+      jumpEventMaxVal = temp->accZ;
+      temp = temp->last;  //step to next node
+    } else if (temp->max && temp->accZ < jumpEventMaxVal){
+      complete = true;
+    }
+  } // end while(!complete)
+
+  // Increase the jump counter and calculate hangtime
+  numberOfJumps += 1;
+  hangtime = jumpEventMinTime - jumpEventMaxTime;
+  std::cout << "JUMP" << std::endl;
+
+  // Update maxHangtime if necessary
+  if (hangtime > maxHangtime){
+    maxHangtime = hangtime;
+  }
+
+  // reset the variables
+  float jumpEventMinVal = 0;
+  float jumpEventMaxVal = 0;
+  possibleJumpEvent = false;
+
+} // end calculateJump()
+
+void createJumpNode(float time, bool max){
+  jumpNode *temp = new jumpNode;
+  temp -> t = time;
+  temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
+  temp -> max = max;
+  temp -> last = head;
+
+  // If we detected a min threshold breach, record it, and it's time and value
+  if (temp->max == false){
+    possibleJumpEvent = true;
+    jumpEventMinTime = temp->t;
+    jumpEventMinVal = temp->accZ;
+  }
+
+  // set head to temp node
+  head = temp;
+
+  // If we just completed a jump then do some calculations
+  if (possibleJumpEvent && temp->max = true){
+    calculateJump();
+  }
+} // end creatJumpNode()
+
+// Buffer for data writing. This is necessary for live derivative.
+struct bufferNode{
+  float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ;
+};
+
+bufferNode *first = NULL;
+bufferNode *second = NULL;
+bufferNode *third = NULL;
+bufferNode *fourth = NULL;
+bufferNode *fifth = NULL;
+
+void createBufferNode(float time){
+  bufferNode *temp = new bufferNode;
   temp -> t = time;
   temp -> yaw = (ypr[0] * 180/M_PI);
   temp -> pitch = ((ypr[1] * 180/M_PI) - pitchOffset);
@@ -89,6 +159,11 @@ void createNode(float time){
   temp -> accX = (static_cast<float>(aaWorld.x) / 4096);
   temp -> accY = (static_cast<float>(aaWorld.y) / 4096);
   temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
+
+  if (fifth != NULL){
+    temp -> dpitch = dpitch();
+    temp -> daccZ = daworldZ();
+  }
 
   fifth = fourth;
   fourth = third;
@@ -116,7 +191,7 @@ void signalHandler(int signum) {
    exit(signum);
 }
 
-bool fileExists (const std::string& name) {
+bool fileExists (const std::string &name) {
   struct stat buffer;
   return (stat (name.c_str(), &buffer) == 0);
 }
@@ -164,6 +239,11 @@ void setOffsets(){
 float dPitch(){
   float dPitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
   return dPitch;
+}
+
+float daworldZ(){
+  float daworldZ = (first->accZ - fifth->accZ)/(first->t - fifth->t);
+  return daworldZ;
 }
 
 // ------------------------ SETUP ----------------------
@@ -303,16 +383,16 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
 
         // Add to buffer
-        createNode(duration.count());
+        createBufferNode(duration.count());
 
         // Display as long as the buffer is full
         if(fifth != NULL){
           // YPR
-          std::cout << std::fixed << std::setprecision(2) << "ypdr: " << third->yaw << "," << third->pitch << "," << dPitch() << "," << third->roll << std::endl;
-          myfile << std::fixed << std::setprecision(2) << third->yaw << "," << third->pitch << "," << dPitch() << "," << third->roll << ",";
+          std::cout << std::fixed << std::setprecision(2) << "ypdr: " << third->yaw << "," << third->pitch << "," << third->dpitch << "," << third->roll << std::endl;
+          myfile << std::fixed << std::setprecision(2) << third->yaw << "," << third->pitch << "," << third->dpitch << "," << third->roll << ",";
 
           // Acc
-          myfile << third->accX << "," << third->accY << "," << third->accZ << ",";
+          myfile << third->accX << "," << third->accY << "," << third->accZ << "," << third->daccZ << ",";
         } else {
           myfile << "," << "," << "," << "," << "," << "," << ",";
         }
@@ -353,26 +433,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         osss << std::put_time(&tm, "%H:%M:%S");
         auto oled_time_str { osss.str() };
 
-        // If we have received new GPS data, update the screen
-        if(newGPSData){ //fix this
-
-          std::string maxSpeedLine = "Max Sp: " + maxSpeedStr;
-          std::string maxGLine = "Max G: [" + posMaxGStr + "," + negMaxGStr +"]";
-
-          // display current GPS state
-          if(seconds == 0){
-            oledWriteString(0,0,"GPS NL");
-            oledWriteString(13,0,oled_time_str);
-          } else {
-            oledWriteString(0,0,"GPS   ");
-            oledWriteString(13,0,oled_time_str);
-            oledWriteString(0,3,maxSpeedLine);
-            oledWriteString(0,4,maxGLine);
-          }
-
-        }
-
-        // ouput GPS data
+        // Ouput GPS data
         std::setprecision(6);
         std::cout.setf(std::ios::fixed, std::ios::floatfield);
         //std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
@@ -383,21 +444,33 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           newGPSData = false;
         }
 
-        myfile << fifoOverflow << std::endl;
-
-        // Highest G z world
-        if((static_cast<float>(aaWorld.z) / 4096) > posMaxG){
-          posMaxG = (static_cast<float>(aaWorld.z) / 4096);
-          std::ostringstream stream2;
-          stream2 << std::fixed << std::setprecision(2) << posMaxG;
-          posMaxGStr = stream2.str();
-        } else if((static_cast<float>(aaWorld.z) / 4096) < negMaxG){
-          negMaxG = (static_cast<float>(aaWorld.z) / 4096);
-          std::ostringstream stream3;
-          stream3 << std::fixed << std::setprecision(2) << negMaxG;
-          negMaxGStr = stream3.str();
+        // Jump calculations
+        if(fourth->daccZ > 0 && third->daccZ <= 0 && third->accZ > jumpMaxThreshold){
+          createJumpNode(duration.count(),true);  // jump maximum (takeoff)
+        } else if (fourth->daccZ < 0 && third->daccZ >= 0 && third->accZ < jumpMinThreshold){
+          creatJumpNode(duration.count(),false); // jump minimum (landing)
         }
 
+        // If we have received new GPS data, update the screen (equates to 1Hz screen updates)
+        if(newGPSData){ //fix this
+
+          std::string maxSpeedLine = "Max Sp: " + maxSpeedStr;
+          std::string jumpLine = "Jumps: " + std::to_string(numberOfJumps);
+          std::string hangtimeLine = "Max Hang: " + std::to_string(maxHangtime);
+
+          // display current GPS state
+          if(seconds == 0){
+            oledWriteString(0,0,"GPS NL");
+            oledWriteString(13,0,oled_time_str);
+          } else {
+            oledWriteString(0,0,"GPS   ");
+            oledWriteString(13,0,oled_time_str);
+            oledWriteString(0,3,maxSpeedLine);
+            oledWriteString(0,4,jumpLine);
+            oledWriteString(0,5,hangtimeLine);
+          }
+
+        }
     }
 }
 
@@ -423,7 +496,7 @@ int main() {
     os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
     std::string filename = os.str();
     myfile.open (filename);
-    myfile << "t,yaw,pitch,dpitch,roll,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt,overflow\n";
+    myfile << "t,yaw,pitch,dpitch,roll,aworldX,aworldY,aworldZ,daworldZ,gpstime,lat,lon,speed,alt,jump,hangtime\n";
 
     // Initialize GPS
     gpsmm gps_rec("localhost", DEFAULT_GPSD_PORT);
