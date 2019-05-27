@@ -142,7 +142,7 @@ void calculateJump(){
   // Increase the jump counter and calculate hangtime
   numberOfJumps += 1;
   hangtime = jumpEventMinTime - jumpEventMaxTime;
-  std::cout << "JUMP" << std::endl;
+  std::cout << "JUMP " << std::to_string(jumpEventMaxVal) << std::endl;
 
   // Update maxHangtime if necessary
   if (hangtime > maxHangtime){
