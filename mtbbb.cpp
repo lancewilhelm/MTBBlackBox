@@ -134,11 +134,10 @@ void calculateJump(){
       } else {
         temp = temp->last;
       }
-    } else if (temp == NULL){
+    } else if (temp == NULL){ //emergency catch
       std::cout << "end of jump list" << std::endl;
       complete = true;
     } else if (temp->max && temp->accZ < jumpEventMaxVal){
-      std::cout << "found a lesser max" << std::endl;
       complete = true;
     } else {
       temp = temp->last;
@@ -437,7 +436,6 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           myfile << "," << "," << "," << "," << ","; // << std::endl;
         } else {
           myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << ","; // << std::endl;
-          newGPSData = false;
         }
 
         // Jump calculations if full buffer
@@ -468,9 +466,10 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             oledWriteString(0,5,hangtimeLine);
           }
 
-        }
-    }
-}
+          newGPSData = false;
+        } // end if (newGPSData)
+    } // end if(fifocount)
+} // end loop()
 
 int main() {
 
