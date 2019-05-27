@@ -119,37 +119,37 @@ struct jumpNode{
 
 jumpNode *head = NULL;
 
-// void calculateJump(){
-//   jumpNode *temp = new jumpNode;
-//   temp = head->last;  //set our first node to the last one from head
-//
-//   bool complete = false;
-//   while(!complete){
-//     if(temp->max && temp->accZ > jumpEventMaxVal){
-//       jumpEventMaxTime = temp->t;
-//       jumpEventMaxVal = temp->accZ;
-//       temp = temp->last;  //step to next node
-//     } else if (temp->max && temp->accZ < jumpEventMaxVal){
-//       complete = true;
-//     }
-//   } // end while(!complete)
-//
-//   // Increase the jump counter and calculate hangtime
-//   numberOfJumps += 1;
-//   hangtime = jumpEventMinTime - jumpEventMaxTime;
-//   std::cout << "JUMP" << std::endl;
-//
-//   // Update maxHangtime if necessary
-//   if (hangtime > maxHangtime){
-//     maxHangtime = hangtime;
-//   }
-//
-//   // reset the variables
-//   float jumpEventMinVal = 0;
-//   float jumpEventMaxVal = 0;
-//   possibleJumpEvent = false;
-//
-// } // end calculateJump()
+void calculateJump(){
+  jumpNode *temp = new jumpNode;
+  temp = head->last;  //set our first node to the last one from head
+
+  bool complete = false;
+  while(!complete){
+    if(temp->max && temp->accZ > jumpEventMaxVal){
+      jumpEventMaxTime = temp->t;
+      jumpEventMaxVal = temp->accZ;
+      temp = temp->last;  //step to next node
+    } else if (temp->max && temp->accZ < jumpEventMaxVal){
+      complete = true;
+    }
+  } // end while(!complete)
+
+  // Increase the jump counter and calculate hangtime
+  numberOfJumps += 1;
+  hangtime = jumpEventMinTime - jumpEventMaxTime;
+  std::cout << "JUMP" << std::endl;
+
+  // Update maxHangtime if necessary
+  if (hangtime > maxHangtime){
+    maxHangtime = hangtime;
+  }
+
+  // reset the variables
+  float jumpEventMinVal = 0;
+  float jumpEventMaxVal = 0;
+  possibleJumpEvent = false;
+
+} // end calculateJump()
 //
 // void createJumpNode(float time, bool max){
 //   jumpNode *temp = new jumpNode;
