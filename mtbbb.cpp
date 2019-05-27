@@ -108,6 +108,9 @@ void createBufferNode(float time){
     std::cout << "calculating..." << std::endl;
     first -> dpitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
     first -> daccZ = (first->accZ - fifth->accZ)/(first->t - fifth->t);
+  } else {
+    first -> dpitch = 0;
+    first -> daccZ = 0;
   }
 
 }
