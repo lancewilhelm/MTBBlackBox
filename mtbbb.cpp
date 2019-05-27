@@ -107,7 +107,7 @@ void setOffsets(){
         mpu.resetFIFO();
     } else if (fifoCount >= 42) {
         // read a packet from FIFO
-        mpu.getFIFOBytes(fifoBuffer, packetSize)
+        mpu.getFIFOBytes(fifoBuffer, packetSize);
 
         // Gather data from dmp
         mpu.dmpGetQuaternion(&q, fifoBuffer);
