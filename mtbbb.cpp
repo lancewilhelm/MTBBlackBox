@@ -64,17 +64,17 @@ bool runLoop = true;
 float pitchOffset = 27.21; // deg
 float rollOffset = 0; // deg
 
-// //jump setup
-// int numberOfJumps = 0;
-// float jumpMinThreshold = -2;
-// float jumpMaxThreshold = 1;
-// bool possibleJumpEvent = false;
-// float jumpEventMinTime;
-// float jumpEventMinVal = 0;
-// float jumpEventMaxTime;
-// float jumpEventMaxVal = 0;
-// float hangtime;
-// float maxHangtime = 0;
+//jump setup
+int numberOfJumps = 0;
+float jumpMinThreshold = -2;
+float jumpMaxThreshold = 1;
+bool possibleJumpEvent = false;
+float jumpEventMinTime;
+float jumpEventMinVal = 0;
+float jumpEventMaxTime;
+float jumpEventMaxVal = 0;
+float hangtime;
+float maxHangtime = 0;
 
 // Buffer for data writing. This is necessary for live derivative.
 struct bufferNode{
