@@ -124,8 +124,8 @@ void setOffsets(){
   } //end while(!finished)
 
   // Display offsets on screen
-  std::string pitchOffsetLine = "Pitch: " + pitchOffset;
-  std::string rollOffsetLine = "Roll: " + rollOffset;
+  std::string pitchOffsetLine = "Pitch: " + std::to_string(pitchOffset);
+  std::string rollOffsetLine = "Roll: " + std::to_string(rollOffset);
   oledWriteString(2,2,pitchOffsetLine);
   oledWriteString(2,3,rollOffsetLine);
   delay(5000);
