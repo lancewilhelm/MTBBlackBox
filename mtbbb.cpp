@@ -404,7 +404,9 @@ int main() {
           // switch runLoop bool
           runLoop = true;
 
+          // MANDATORY delay so as to not retrigger program stop immediately
           delay(2000);
+          oledFill(0x00); // clear screen
         } // end if(Button==HIGH)
       } // end if(runLoop), else
     } // end while(true)
