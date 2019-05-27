@@ -307,9 +307,9 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         // Add to buffer
         createNode(duration.count());
 
-        std::cout << "Attempting to display YPR" << std::endl;
-        // YPR
+        // Display as long as the buffer is full
         if(fifth != NULL){
+          // YPR
           std::cout << std::fixed << std::setprecision(2) << "ypr: " << third->yaw << "," << third->pitch << "," << third->roll << std::endl;
         }
 
