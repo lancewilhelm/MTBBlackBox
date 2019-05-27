@@ -313,6 +313,8 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 
           // Acc
           myfile << third->accX << "," << third->accY << "," << third->accZ << ",";
+        } else {
+          myfile << "," << "," << "," << "," << "," << "," << ",";
         }
 
         // Yaw Pitch Roll
