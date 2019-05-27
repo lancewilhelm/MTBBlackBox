@@ -96,8 +96,8 @@ void createBufferNode(float time){
   temp -> accX = (static_cast<float>(aaWorld.x) / 4096);
   temp -> accY = (static_cast<float>(aaWorld.y) / 4096);
   temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
-  temp -> dpitch = 0;
-  temp -> daccZ = 0;
+  temp -> dpitch = 0; //temp
+  temp -> daccZ = 0;  //temp
 
   fifth = fourth;
   fourth = third;
@@ -105,12 +105,11 @@ void createBufferNode(float time){
   second = first;
   first = temp;
 
-  std::cout << "attempt to calc dpitch and daccZ" << std::endl;
-  // if (fifth != NULL){
-  //   std::cout << "calculating..." << std::endl;
-  //   third -> dpitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
-  //   third -> daccZ = (first->accZ - fifth->accZ)/(first->t - fifth->t);
-  // }
+  if (fifth != NULL){
+    std::cout << "calculating..." << std::endl;
+    third -> dpitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
+    third -> daccZ = (first->accZ - fifth->accZ)/(first->t - fifth->t);
+  }
 }
 
 // struct jumpNode{
