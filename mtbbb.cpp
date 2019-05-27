@@ -183,6 +183,8 @@ void createJumpNode(float time, bool max, std::ofstream &myfile){
     std::cout << "CALC JUMP" << std::endl;
     calculateJump();
     myfile << numberOfJumps << "," << hangtime << std::endl;
+  } else {
+    myfile << "," << std::endl;
   }
 } // end creatJumpNode()
 
