@@ -388,14 +388,6 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           myfile << "," << "," << "," << "," << "," << "," << ",";
         }
 
-        // Yaw Pitch Roll
-        // std::cout << std::fixed << std::setprecision(2) << "ypr: " << (ypr[0] * 180/M_PI) << "," << ((ypr[1] * 180/M_PI) - pitchOffset) << "," << ((ypr[2] * 180/M_PI) - rollOffset) << std::endl;
-        // myfile << std::fixed << std::setprecision(2) << (ypr[0] * 180/M_PI) << "," << ((ypr[1] * 180/M_PI) - pitchOffset) << "," << ((ypr[2] * 180/M_PI) - rollOffset) << ",";
-
-        // // display initial world-frame acceleration, adjusted to remove gravity
-        // // and rotated based on known orientation from quaternion
-        // myfile << (static_cast<float>(aaWorld.x) / 4096) << "," << (static_cast<float>(aaWorld.y) / 4096) << "," << ((static_cast<float>(aaWorld.z) / 4096) - 1) << ",";
-
         // Display and wriet the GPS data
         timestamp_t ts { gpsd_data->fix.time };
         auto latitude  { gpsd_data->fix.latitude };
@@ -435,19 +427,21 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           newGPSData = false;
         }
 
-        // Jump calculations
-        // if(fourth->daccZ > 0 && third->daccZ <= 0 && third->accZ > jumpMaxThreshold){
-        //   createJumpNode(duration.count(),true);  // jump maximum (takeoff)
-        // } else if (fourth->daccZ < 0 && third->daccZ >= 0 && third->accZ < jumpMinThreshold){
-        //   createJumpNode(duration.count(),false); // jump minimum (landing)
-        // }
+        // Jump calculations if full buffer
+        if(fifth != NULL){
+          if(fourth->daccZ > 0 && third->daccZ <= 0 && third->accZ > jumpMaxThreshold){
+            createJumpNode(duration.count(),true);  // jump maximum (takeoff)
+          } else if (fourth->daccZ < 0 && third->daccZ >= 0 && third->accZ < jumpMinThreshold){
+            createJumpNode(duration.count(),false); // jump minimum (landing)
+          }
+        }
 
         // If we have received new GPS data, update the screen (equates to 1Hz screen updates)
         if(newGPSData){ //fix this
 
           std::string maxSpeedLine = "Max Sp: " + maxSpeedStr;
-          // std::string jumpLine = "Jumps: " + std::to_string(numberOfJumps);
-          // std::string hangtimeLine = "Max Hang: " + std::to_string(maxHangtime);
+          std::string jumpLine = "Jumps: " + std::to_string(numberOfJumps);
+          std::string hangtimeLine = "Max Hang: " + std::to_string(maxHangtime);
 
           // display current GPS state
           if(seconds == 0){
@@ -457,8 +451,8 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             oledWriteString(0,0,"GPS   ");
             oledWriteString(13,0,oled_time_str);
             oledWriteString(0,3,maxSpeedLine);
-            // oledWriteString(0,4,jumpLine);
-            // oledWriteString(0,5,hangtimeLine);
+            oledWriteString(0,4,jumpLine);
+            oledWriteString(0,5,hangtimeLine);
           }
 
         }
