@@ -123,6 +123,8 @@ void calculateJump(){
   jumpNode *temp = new jumpNode;
   temp = head->last;  //set our first node to the last one from head
 
+  std::cout << "Jump Event Max Start: " << std::to_string(jumpEventMaxVal) << std::endl;
+
   bool complete = false;
   while(!complete){
     if(temp->max && temp->accZ > jumpEventMaxVal){
