@@ -460,7 +460,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             oledWriteString(13,0,oled_time_str);
             oledWriteString(0,3,maxSpeedLine);
             // oledWriteString(0,4,jumpLine);
-            oledWriteString(0,5,hangtimeLine);
+            // oledWriteString(0,5,hangtimeLine);
           }
 
         }
