@@ -106,20 +106,19 @@ void createBufferNode(float time){
   first = temp;
 
   if (fifth != NULL){
-    std::cout << "calculating..." << std::endl;
     third -> dpitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
     third -> daccZ = (first->accZ - fifth->accZ)/(first->t - fifth->t);
   }
 }
 
-// struct jumpNode{
-//   bool max; // if it's a max node this is true. False for min node.
-//   float t, accZ;
-//   jumpNode *last;
-// };
-//
-// jumpNode *head = NULL;
-//
+struct jumpNode{
+  bool max; // if it's a max node this is true. False for min node.
+  float t, accZ;
+  jumpNode *last;
+};
+
+jumpNode *head = NULL;
+
 // void calculateJump(){
 //   jumpNode *temp = new jumpNode;
 //   temp = head->last;  //set our first node to the last one from head
