@@ -74,20 +74,12 @@ struct node{
   node *next;
 };
 
-class buffer
-{
-  Private:
-  node *first, *second, *third, *fourth, *fifth;
-  public:
-  buffer()
-  {
-    first = NULL:
-    second = NULL;
-    third = NULL;
-    fourth = NULL;
-    fifth = NULL;
-  }
-};
+node *first, *second, *third, *fourth, *fifth;
+first = NULL:
+second = NULL;
+third = NULL;
+fourth = NULL;
+fifth = NULL;
 
 void createNode(float time){
   node *temp = new node;
@@ -437,9 +429,6 @@ int main() {
       std::cerr << "No GPSD running.\n";
       gpsfail = true;
     }
-
-    // initialize buffer for data
-    buffer();
 
     // Clear display before starting
     oledFill(0x00);
