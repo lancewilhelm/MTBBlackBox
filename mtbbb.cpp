@@ -430,18 +430,19 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         osss << std::put_time(&tm, "%H:%M:%S");
         auto oled_time_str { osss.str() };
 
-        // Ouput GPS data
-        std::setprecision(6);
-        std::cout.setf(std::ios::fixed, std::ios::floatfield);
-        //std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
-        if(seconds == 0 || newGPSData == false){
-          myfile << "," << "," << "," << "," << ","; // << std::endl;
-        } else {
-          myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << ","; // << std::endl;
-        }
-
-        // Jump calculations if full buffer
+        // Output some things once the buffer fills
         if(fifth != NULL){
+          // Ouput GPS data
+          std::setprecision(6);
+          std::cout.setf(std::ios::fixed, std::ios::floatfield);
+          //std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
+          if(seconds == 0 || newGPSData == false){
+            myfile << "," << "," << "," << "," << ","; // << std::endl;
+          } else {
+            myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << ","; // << std::endl;
+          }
+
+          // Jump calculations
           if(fourth->daccZ > 0 && third->daccZ <= 0 && third->accZ > jumpMaxThreshold){
             createJumpNode(duration.count(),true,myfile);  // jump maximum (takeoff)
           } else if (fourth->daccZ < 0 && third->daccZ >= 0 && third->accZ < jumpMinThreshold){
