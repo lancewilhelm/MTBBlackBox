@@ -126,9 +126,9 @@ void calculateJump(){
   bool complete = false;
   while(!complete){
     if(temp->max && temp->accZ > jumpEventMaxVal){
-      std::cout << "Found Max" << std::endl;
       jumpEventMaxTime = temp->t;
       jumpEventMaxVal = temp->accZ;
+      std::cout << "FOUND MAX" << std::endl;
       temp = temp->last;  //step to next node
     } else if (temp->max && temp->accZ < jumpEventMaxVal || temp == NULL){
       complete = true;
@@ -153,6 +153,7 @@ void calculateJump(){
 } // end calculateJump()
 
 void createJumpNode(float time, bool max){
+  std::cout << "JUMP NODE" << std::endl;
   jumpNode *temp = new jumpNode;
   temp -> t = time;
   temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
@@ -171,6 +172,7 @@ void createJumpNode(float time, bool max){
 
   // If we just completed a jump then do some calculations
   if (possibleJumpEvent && temp->max == true){
+    std::cout << "CALC JUMP" << std::endl;
     calculateJump();
   }
 } // end creatJumpNode()
