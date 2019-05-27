@@ -124,13 +124,14 @@ void calculateJump(){
   temp = head->last;  //set our first node to the last one from head
 
   bool complete = false;
-  std::cout << "STARTING WHILE LOOP" << std::endl;
   while(!complete){
     if(temp->max && temp->accZ > jumpEventMaxVal){
       jumpEventMaxTime = temp->t;
       jumpEventMaxVal = temp->accZ;
-      std::cout << "FOUND MAX" << std::endl;
+      std::cout << "FOUND MAX" << std::to_string(jumpEventMaxTime) << ", " << std::to_string(jumpEventMaxTime) << std::endl;
+      std::cout << "attempting to set next node" << std::endl;
       temp = temp->last;  //step to next node
+      std::cout << "set next node" << std::endl;
     } else if (temp->max && temp->accZ < jumpEventMaxVal || temp == NULL){
       complete = true;
     } else {
