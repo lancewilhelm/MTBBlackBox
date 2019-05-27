@@ -399,9 +399,12 @@ int main() {
 
           // Clear display before starting
           oledFill(0x00);
+          oledWriteString(2,0,"RESTARTING...");
 
           // switch runLoop bool
           runLoop = true;
+
+          delay(2000);
         } // end if(Button==HIGH)
       } // end if(runLoop), else
     } // end while(true)
