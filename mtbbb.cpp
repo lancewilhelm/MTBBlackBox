@@ -449,7 +449,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 
           std::string maxSpeedLine = "Max Sp: " + maxSpeedStr;
           // std::string jumpLine = "Jumps: " + std::to_string(numberOfJumps);
-          std::string hangtimeLine = "Max Hang: " + std::to_string(maxHangtime);
+          // std::string hangtimeLine = "Max Hang: " + std::to_string(maxHangtime);
 
           // display current GPS state
           if(seconds == 0){
