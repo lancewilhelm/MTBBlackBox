@@ -125,7 +125,7 @@ void calculateJump(){
 
   bool complete = false;
   while(!complete){
-    if(temp->max && temp->accZ > jumpEventMaxVal){
+    if(temp->max){
       jumpEventMaxTime = temp->t;
       jumpEventMaxVal = temp->accZ;
       complete = true;
