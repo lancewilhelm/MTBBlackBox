@@ -74,12 +74,11 @@ struct node{
   node *next;
 };
 
-node *first, *second, *third, *fourth, *fifth;
-first = NULL:
-second = NULL;
-third = NULL;
-fourth = NULL;
-fifth = NULL;
+node first = NULL;
+node second = NULL;
+node third = NULL;
+node fourth = NULL;
+node fifth = NULL;
 
 void createNode(float time){
   node *temp = new node;
@@ -88,8 +87,8 @@ void createNode(float time){
   temp -> pitch = ((ypr[1] * 180/M_PI) - pitchOffset);
   temp -> roll = ((ypr[2] * 180/M_PI) - rollOffset);
   temp -> accX = (static_cast<float>(aaWorld.x) / 4096);
-  temp -> accY = (static_cast<float>(aaWorld.y) / 4096)
-  temp -> accZ = (static_cast<float>(aaWorld.z) / 4096)
+  temp -> accY = (static_cast<float>(aaWorld.y) / 4096);
+  temp -> accZ = (static_cast<float>(aaWorld.z) / 4096);
 
   fifth = fourth;
   fourth = third;
