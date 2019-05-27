@@ -128,17 +128,12 @@ void calculateJump(){
     if(temp->max && temp->accZ > jumpEventMaxVal){
       jumpEventMaxTime = temp->t;
       jumpEventMaxVal = temp->accZ;
-
-      if(temp->last == NULL){
-        complete = true;
-      } else {
-        temp = temp->last;
-      }
+      complete = true;
     } else if (temp == NULL){ //emergency catch
       std::cout << "end of jump list" << std::endl;
       complete = true;
-    } else if (temp->max && temp->accZ < jumpEventMaxVal){
-      complete = true;
+    // } else if (temp->max && temp->accZ < jumpEventMaxVal){
+    //   complete = true;
     } else {
       temp = temp->last;
     }
