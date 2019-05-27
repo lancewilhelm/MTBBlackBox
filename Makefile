@@ -1,23 +1,31 @@
-all: mtbbb
+# Basic Variables
+CC = g++
+CFLAGS= -Wall -O2
+LDFLAGS = -lm -lwiringPi -loled96 -lpthread
 
-HDRS = helper_3dmath.h I2Cdev.h MPU6050_6Axis_MotionApps20.h MPU6050.h
-CMN_OBJS = I2Cdev.o MPU6050.o
-MTBBB_OBJS = mtbbb.o
-CFLAGS = 'pkg-config --cflags libgps'
-LDFLAGS = '$(pkg-config --libs libgps)'
+# List of Sources
+SOURCES = I2Cdev.cpp MPU6050.cpp mtbbb.cpp
+OBJECTS = $(SOURCES:.cpp=.o)
 
-$(CMN_OBJS) $(MTBBB_OBJS) : $(HDRS)
+# Name of Target
+EXECUTABLE = mtbbb
 
-mtbbb: $(CMN_OBJS) $(MTBBB_OBJS)
-	$(CXX) -Wall -std=c++14 -pedantic $(LDFLAGS) -o $@ $^ -lm -lwiringPi
+# Pkg Config
+PKG = `pkg-config --cflags --libs libgps`
 
-	#g++ -Wall -std=c++14 -pedantic $(pkg-config --libs libgps) -o mtbbb I2Cdev.o MPU6050.o mtbbb.o -lm -lwiringPi -loled96 -lpthread
+$(EXECUTABLE): $(OBJECTS)
+	$(CC) $(CFLAGS) $(PKG) -o $@ $(OBJECTS) $(LDFLAGS)
 
-# 'make test_3d' will give you a test_3d that is controlled via the keyboard rather
-# than by moving the MPU6050.  Use the keys x, X, y, Y, z, Z, and q to exit.
-# Note it is the terminal you invoked the binary from that is listening for the
-# keyboard, not the window with the wireframe in it, so make sure the terminal
-# has input focus.
+I2Cdev.o: I2Cdev.cpp
+	$(CC) -c -o I2Cdev.o I2Cdev.cpp
+
+MPU6050.o: MPU6050.cpp
+	$(CC) -c -o MPU6050.o MPU6050.cpp
+
+mtbbb.o: mtbbb.cpp
+	$(CC) -c -o mtbbb.o mtbbb.cpp
 
 clean:
-	rm -f $(CMN_OBJS) $(MTBBB_OBJS) $(D3D_OBJS) mtbbb
+	rm -f $(OBJECTS) $(EXECUTABLE)
+
+	#g++ -Wall -std=c++14 -pedantic $(pkg-config --libs libgps) -o mtbbb I2Cdev.o MPU6050.o mtbbb.o -lm -lwiringPi -loled96 -lpthread
