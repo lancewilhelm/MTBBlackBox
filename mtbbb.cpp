@@ -88,7 +88,7 @@ void createNode(float time){
   temp -> roll = ((ypr[2] * 180/M_PI) - rollOffset);
   temp -> accX = (static_cast<float>(aaWorld.x) / 4096);
   temp -> accY = (static_cast<float>(aaWorld.y) / 4096);
-  temp -> accZ = (static_cast<float>(aaWorld.z) / 4096);
+  temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
 
   fifth = fourth;
   fourth = third;
@@ -309,15 +309,16 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         if(fifth != NULL){
           // YPR
           std::cout << std::fixed << std::setprecision(2) << "ypdr: " << third->yaw << "," << third->pitch << "," << dPitch() << "," << third->roll << std::endl;
+          myfile << std::fixed << std::setprecision(2) << "ypdr: " << third->yaw << "," << third->pitch << "," << dPitch() << "," << third->roll << ",";
+
+          // Acc
+          myfile << third->accX << "," << third->accY << "," << third->accZ << ","
         }
 
         // Yaw Pitch Roll
         // std::cout << std::fixed << std::setprecision(2) << "ypr: " << (ypr[0] * 180/M_PI) << "," << ((ypr[1] * 180/M_PI) - pitchOffset) << "," << ((ypr[2] * 180/M_PI) - rollOffset) << std::endl;
         // myfile << std::fixed << std::setprecision(2) << (ypr[0] * 180/M_PI) << "," << ((ypr[1] * 180/M_PI) - pitchOffset) << "," << ((ypr[2] * 180/M_PI) - rollOffset) << ",";
-        //
-        // // display real acceleration, adjusted to remove gravity
-        // // myfile << (static_cast<float>(aaReal.x) / 4096) << "," << (static_cast<float>(aaReal.y) / 4096) << "," << (static_cast<float>(aaReal.z) / 4096) << ",";
-        //
+
         // // display initial world-frame acceleration, adjusted to remove gravity
         // // and rotated based on known orientation from quaternion
         // myfile << (static_cast<float>(aaWorld.x) / 4096) << "," << (static_cast<float>(aaWorld.y) / 4096) << "," << ((static_cast<float>(aaWorld.z) / 4096) - 1) << ",";
@@ -420,7 +421,7 @@ int main() {
     os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
     std::string filename = os.str();
     myfile.open (filename);
-    myfile << "t,yaw,pitch,roll,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt,overflow\n";
+    myfile << "t,yaw,pitch,dpitch,roll,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt,overflow\n";
 
     // Initialize GPS
     gpsmm gps_rec("localhost", DEFAULT_GPSD_PORT);
