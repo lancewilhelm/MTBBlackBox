@@ -64,31 +64,31 @@ bool runLoop = true;
 float pitchOffset = 27.21; // deg
 float rollOffset = 0; // deg
 
-//jump setup
-int numberOfJumps = 0;
-float jumpMinThreshold = -2;
-float jumpMaxThreshold = 1;
-bool possibleJumpEvent = false;
-float jumpEventMinTime;
-float jumpEventMinVal = 0;
-float jumpEventMaxTime;
-float jumpEventMaxVal = 0;
-float hangtime;
-float maxHangtime = 0;
+// //jump setup
+// int numberOfJumps = 0;
+// float jumpMinThreshold = -2;
+// float jumpMaxThreshold = 1;
+// bool possibleJumpEvent = false;
+// float jumpEventMinTime;
+// float jumpEventMinVal = 0;
+// float jumpEventMaxTime;
+// float jumpEventMaxVal = 0;
+// float hangtime;
+// float maxHangtime = 0;
 
 // Buffer for data writing. This is necessary for live derivative.
-struct node{
+struct bufferNode{
   float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ;
 };
 
-node *first = NULL;
-node *second = NULL;
-node *third = NULL;
-node *fourth = NULL;
-node *fifth = NULL;
+bufferNode *first = NULL;
+bufferNode *second = NULL;
+bufferNode *third = NULL;
+bufferNode *fourth = NULL;
+bufferNode *fifth = NULL;
 
-void createnode(float time){
-  node *temp = new node;
+void createBufferNode(float time){
+  bufferNode *temp = new bufferNode;
   temp -> t = time;
   temp -> yaw = (ypr[0] * 180/M_PI);
   temp -> pitch = ((ypr[1] * 180/M_PI) - pitchOffset);
@@ -113,68 +113,68 @@ void createnode(float time){
   // }
 }
 
-struct jumpNode{
-  bool max; // if it's a max node this is true. False for min node.
-  float t, accZ;
-  jumpNode *last;
-};
-
-jumpNode *head = NULL;
-
-void calculateJump(){
-  jumpNode *temp = new jumpNode;
-  temp = head->last;  //set our first node to the last one from head
-
-  bool complete = false;
-  while(!complete){
-    if(temp->max && temp->accZ > jumpEventMaxVal){
-      jumpEventMaxTime = temp->t;
-      jumpEventMaxVal = temp->accZ;
-      temp = temp->last;  //step to next node
-    } else if (temp->max && temp->accZ < jumpEventMaxVal){
-      complete = true;
-    }
-  } // end while(!complete)
-
-  // Increase the jump counter and calculate hangtime
-  numberOfJumps += 1;
-  hangtime = jumpEventMinTime - jumpEventMaxTime;
-  std::cout << "JUMP" << std::endl;
-
-  // Update maxHangtime if necessary
-  if (hangtime > maxHangtime){
-    maxHangtime = hangtime;
-  }
-
-  // reset the variables
-  float jumpEventMinVal = 0;
-  float jumpEventMaxVal = 0;
-  possibleJumpEvent = false;
-
-} // end calculateJump()
-
-void createJumpNode(float time, bool max){
-  jumpNode *temp = new jumpNode;
-  temp -> t = time;
-  temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
-  temp -> max = max;
-  temp -> last = head;
-
-  // If we detected a min threshold breach, record it, and it's time and value
-  if (temp->max == false){
-    possibleJumpEvent = true;
-    jumpEventMinTime = temp->t;
-    jumpEventMinVal = temp->accZ;
-  }
-
-  // set head to temp node
-  head = temp;
-
-  // If we just completed a jump then do some calculations
-  if (possibleJumpEvent && temp->max == true){
-    calculateJump();
-  }
-} // end creatJumpNode()
+// struct jumpNode{
+//   bool max; // if it's a max node this is true. False for min node.
+//   float t, accZ;
+//   jumpNode *last;
+// };
+//
+// jumpNode *head = NULL;
+//
+// void calculateJump(){
+//   jumpNode *temp = new jumpNode;
+//   temp = head->last;  //set our first node to the last one from head
+//
+//   bool complete = false;
+//   while(!complete){
+//     if(temp->max && temp->accZ > jumpEventMaxVal){
+//       jumpEventMaxTime = temp->t;
+//       jumpEventMaxVal = temp->accZ;
+//       temp = temp->last;  //step to next node
+//     } else if (temp->max && temp->accZ < jumpEventMaxVal){
+//       complete = true;
+//     }
+//   } // end while(!complete)
+//
+//   // Increase the jump counter and calculate hangtime
+//   numberOfJumps += 1;
+//   hangtime = jumpEventMinTime - jumpEventMaxTime;
+//   std::cout << "JUMP" << std::endl;
+//
+//   // Update maxHangtime if necessary
+//   if (hangtime > maxHangtime){
+//     maxHangtime = hangtime;
+//   }
+//
+//   // reset the variables
+//   float jumpEventMinVal = 0;
+//   float jumpEventMaxVal = 0;
+//   possibleJumpEvent = false;
+//
+// } // end calculateJump()
+//
+// void createJumpNode(float time, bool max){
+//   jumpNode *temp = new jumpNode;
+//   temp -> t = time;
+//   temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
+//   temp -> max = max;
+//   temp -> last = head;
+//
+//   // If we detected a min threshold breach, record it, and it's time and value
+//   if (temp->max == false){
+//     possibleJumpEvent = true;
+//     jumpEventMinTime = temp->t;
+//     jumpEventMinVal = temp->accZ;
+//   }
+//
+//   // set head to temp node
+//   head = temp;
+//
+//   // If we just completed a jump then do some calculations
+//   if (possibleJumpEvent && temp->max == true){
+//     calculateJump();
+//   }
+// } // end creatJumpNode()
 
 // Define for the LEDS
 #define GREEN 0
@@ -376,7 +376,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
 
         // Add to buffer
-        createnode(duration.count());
+        createBufferNode(duration.count());
 
         // Display as long as the buffer is full
         if(fifth != NULL){
@@ -438,17 +438,17 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         }
 
         // Jump calculations
-        if(fourth->daccZ > 0 && third->daccZ <= 0 && third->accZ > jumpMaxThreshold){
-          createJumpNode(duration.count(),true);  // jump maximum (takeoff)
-        } else if (fourth->daccZ < 0 && third->daccZ >= 0 && third->accZ < jumpMinThreshold){
-          createJumpNode(duration.count(),false); // jump minimum (landing)
-        }
+        // if(fourth->daccZ > 0 && third->daccZ <= 0 && third->accZ > jumpMaxThreshold){
+        //   createJumpNode(duration.count(),true);  // jump maximum (takeoff)
+        // } else if (fourth->daccZ < 0 && third->daccZ >= 0 && third->accZ < jumpMinThreshold){
+        //   createJumpNode(duration.count(),false); // jump minimum (landing)
+        // }
 
         // If we have received new GPS data, update the screen (equates to 1Hz screen updates)
         if(newGPSData){ //fix this
 
           std::string maxSpeedLine = "Max Sp: " + maxSpeedStr;
-          std::string jumpLine = "Jumps: " + std::to_string(numberOfJumps);
+          // std::string jumpLine = "Jumps: " + std::to_string(numberOfJumps);
           std::string hangtimeLine = "Max Hang: " + std::to_string(maxHangtime);
 
           // display current GPS state
@@ -459,7 +459,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             oledWriteString(0,0,"GPS   ");
             oledWriteString(13,0,oled_time_str);
             oledWriteString(0,3,maxSpeedLine);
-            oledWriteString(0,4,jumpLine);
+            // oledWriteString(0,4,jumpLine);
             oledWriteString(0,5,hangtimeLine);
           }
 
