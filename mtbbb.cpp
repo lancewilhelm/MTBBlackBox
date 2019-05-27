@@ -309,7 +309,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         if(fifth != NULL){
           // YPR
           std::cout << std::fixed << std::setprecision(2) << "ypdr: " << third->yaw << "," << third->pitch << "," << dPitch() << "," << third->roll << std::endl;
-          myfile << std::fixed << std::setprecision(2) << "ypdr: " << third->yaw << "," << third->pitch << "," << dPitch() << "," << third->roll << ",";
+          myfile << std::fixed << std::setprecision(2) << third->yaw << "," << third->pitch << "," << dPitch() << "," << third->roll << ",";
 
           // Acc
           myfile << third->accX << "," << third->accY << "," << third->accZ << ",";
