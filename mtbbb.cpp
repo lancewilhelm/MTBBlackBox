@@ -76,6 +76,17 @@ float jumpEventMaxVal = 0;
 float hangtime;
 float maxHangtime = 0;
 
+// Calculation functions
+float dPitch(){
+  float dPitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
+  return dPitch;
+}
+
+float daworldZ(){
+  float daworldZ = (first->accZ - fifth->accZ)/(first->t - fifth->t);
+  return daworldZ;
+}
+
 struct jumpNode{
   bool max; // if it's a max node this is true. False for min node.
   float t, accZ;
@@ -134,7 +145,7 @@ void createJumpNode(float time, bool max){
   head = temp;
 
   // If we just completed a jump then do some calculations
-  if (possibleJumpEvent && temp->max = true){
+  if (possibleJumpEvent && temp->max == true){
     calculateJump();
   }
 } // end creatJumpNode()
@@ -161,7 +172,7 @@ void createBufferNode(float time){
   temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
 
   if (fifth != NULL){
-    temp -> dpitch = dpitch();
+    temp -> dpitch = dPitch();
     temp -> daccZ = daworldZ();
   }
 
@@ -235,16 +246,6 @@ void setOffsets(){
   delay(5000);
   return;
 } //end setOffsets()
-
-float dPitch(){
-  float dPitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
-  return dPitch;
-}
-
-float daworldZ(){
-  float daworldZ = (first->accZ - fifth->accZ)/(first->t - fifth->t);
-  return daworldZ;
-}
 
 // ------------------------ SETUP ----------------------
 void setup() {
@@ -448,7 +449,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         if(fourth->daccZ > 0 && third->daccZ <= 0 && third->accZ > jumpMaxThreshold){
           createJumpNode(duration.count(),true);  // jump maximum (takeoff)
         } else if (fourth->daccZ < 0 && third->daccZ >= 0 && third->accZ < jumpMinThreshold){
-          creatJumpNode(duration.count(),false); // jump minimum (landing)
+          createJumpNode(duration.count(),false); // jump minimum (landing)
         }
 
         // If we have received new GPS data, update the screen (equates to 1Hz screen updates)
