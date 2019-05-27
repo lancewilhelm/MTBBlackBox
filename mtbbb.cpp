@@ -448,8 +448,10 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           } else if (fourth->daccZ < 0 && third->daccZ >= 0 && third->accZ < jumpMinThreshold){
             createJumpNode(duration.count(),false,myfile); // jump minimum (landing)
           } else {
-            myfile << ',' << std::endl;
+            myfile << "," << std::endl;
           }
+        } else {
+          myfile << "," << "," << "," << "," << "," << "," << std::endl;
         }
 
         // If we have received new GPS data, update the screen (equates to 1Hz screen updates)
