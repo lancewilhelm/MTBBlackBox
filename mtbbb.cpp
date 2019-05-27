@@ -150,29 +150,29 @@ void calculateJump(){
   possibleJumpEvent = false;
 
 } // end calculateJump()
-//
-// void createJumpNode(float time, bool max){
-//   jumpNode *temp = new jumpNode;
-//   temp -> t = time;
-//   temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
-//   temp -> max = max;
-//   temp -> last = head;
-//
-//   // If we detected a min threshold breach, record it, and it's time and value
-//   if (temp->max == false){
-//     possibleJumpEvent = true;
-//     jumpEventMinTime = temp->t;
-//     jumpEventMinVal = temp->accZ;
-//   }
-//
-//   // set head to temp node
-//   head = temp;
-//
-//   // If we just completed a jump then do some calculations
-//   if (possibleJumpEvent && temp->max == true){
-//     calculateJump();
-//   }
-// } // end creatJumpNode()
+
+void createJumpNode(float time, bool max){
+  jumpNode *temp = new jumpNode;
+  temp -> t = time;
+  temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
+  temp -> max = max;
+  temp -> last = head;
+
+  // If we detected a min threshold breach, record it, and it's time and value
+  if (temp->max == false){
+    possibleJumpEvent = true;
+    jumpEventMinTime = temp->t;
+    jumpEventMinVal = temp->accZ;
+  }
+
+  // set head to temp node
+  head = temp;
+
+  // If we just completed a jump then do some calculations
+  if (possibleJumpEvent && temp->max == true){
+    calculateJump();
+  }
+} // end creatJumpNode()
 
 // Define for the LEDS
 #define GREEN 0
