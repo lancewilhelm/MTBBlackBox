@@ -414,7 +414,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           std::cout << std::fixed << std::setprecision(2) << "ypdr: " << mtbbbData[n-bufferCenterOffset].yaw << "," << mtbbbData[n-bufferCenterOffset].pitch << "," << mtbbbData[n-bufferCenterOffset].dpitch << "," << mtbbbData[n-bufferCenterOffset].roll << std::endl;
         }
 
-        check for new max speed
+        // check for new max speed
         if(mtbbbData[n].speed > maxSpeed){
           maxSpeed = mtbbbData[n].speed;
           std::ostringstream stream;
