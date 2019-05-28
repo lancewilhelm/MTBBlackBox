@@ -392,7 +392,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
 
         //--------------------------Data Acquisition---------------------------
         // Create a new vector entry for data
-        mtbbbData.push_back(mtbbbDataStruct())
+        mtbbbData.push_back(mtbbbDataStruct());
         int n = mtbbbData.size() - 1; // Gets current count for reference
 
         // Record the time
