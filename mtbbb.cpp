@@ -472,7 +472,7 @@ int main() {
             if (mtbbbData[i].lat != 0){
               myfile << mtbbbData[i].gpstime << "," << mtbbbData[i].lat << "," << mtbbbData[i].lon << "," << mtbbbData[i].speed << "," << std::fixed << std::setprecision(2) << mtbbbData[i].alt << ",";
             } else {
-              myfile << ",,,,,"
+              myfile << ",,,,,";
             }
 
             myfile << mtbbbData[i].jump << ",";
