@@ -372,18 +372,18 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         //   jumpEventMinLoc = 0;
         //
         } else if (mtbbbData[n-(bufferCenterOffset+1)].daccZ > 0 && mtbbbData[n-bufferCenterOffset].daccZ <= 0 && mtbbbData[n-bufferCenterOffset].accZ > jumpMaxThreshold){
-        //   mtbbbData[n-bufferCenterOffset].jumpMinMaxEvent = 1; // jump maximum (takeoff). Used for debugging
-        //
-        //   jumpEventMaxLoc = n - bufferCenterOffset;
+          mtbbbData[n-bufferCenterOffset].jumpMinMaxEvent = 1; // jump maximum (takeoff). Used for debugging
+
+          jumpEventMaxLoc = n - bufferCenterOffset;
         } else if (mtbbbData[n-(bufferCenterOffset+1)].daccZ < 0 && mtbbbData[n-bufferCenterOffset].daccZ >= 0 && mtbbbData[n-bufferCenterOffset].accZ < jumpMinThreshold){
-        //   mtbbbData[n-bufferCenterOffset].jumpMinMaxEvent = -1; // jump minimum (landing). Used for debugging
-        //
-        //   // Flag for a possible finish of a jump
-        //   possibleJumpEvent = true;
-        //   jumpEventMinLoc = n - bufferCenterOffset;
-        //
+          mtbbbData[n-bufferCenterOffset].jumpMinMaxEvent = -1; // jump minimum (landing). Used for debugging
+
+          // Flag for a possible finish of a jump
+          possibleJumpEvent = true;
+          jumpEventMinLoc = n - bufferCenterOffset;
+
         } else {
-        //   mtbbbData[n-bufferCenterOffset].jumpMinMaxEvent = 0; // no jump event
+          mtbbbData[n-bufferCenterOffset].jumpMinMaxEvent = 0; // no jump event
         } // end of jump if statement
 
         // If we have received new GPS data, update the screen (equates to 1Hz screen updates)
