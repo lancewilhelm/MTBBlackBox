@@ -445,6 +445,9 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
           if(seconds == 0){
             oledWriteString(0,0,"GPS NL");
             oledWriteString(13,0,oled_time_str);
+            oledWriteString(0,4,jumpLine);
+            oledWriteString(0,5,hangtimeLine);
+            oledWriteString(0,6,whipTableLine);
           } else {
             oledWriteString(0,0,"GPS   ");
             oledWriteString(13,0,oled_time_str);
