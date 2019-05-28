@@ -83,8 +83,6 @@ float hangtime;
 float maxHangtime = 0;
 std::string maxHangtimeStr;
 
-// myfile << "t,yaw,pitch,dpitch,roll,aworldX,aworldY,aworldZ,daworldZ,gpstime,lat,lon,speed,alt,jump,hangtime\n";
-
 // -----------MTBBB Data Structure--------------
 struct mtbbbDataStruct {
   float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ, lat, lon, speed, alt, hangtime;
@@ -95,40 +93,9 @@ struct mtbbbDataStruct {
 // Initialize the data structure
 std::vector<mtbbbDataStruct> mtbbbData;
 
-// Buffer for data writing. This is necessary for live derivative.
-// struct bufferNode{
-//   float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ;
-// };
-//
-// bufferNode *first = NULL;
-// bufferNode *second = NULL;
-// bufferNode *third = NULL;
-// bufferNode *fourth = NULL;
-// bufferNode *fifth = NULL;
-//
-// void createBufferNode(float time){
-//   bufferNode *temp = new bufferNode;
-//   temp -> t = time;
-//   temp -> yaw = (ypr[0] * 180/M_PI);
-//   temp -> pitch = ((ypr[1] * 180/M_PI) - pitchOffset);
-//   temp -> roll = ((ypr[2] * 180/M_PI) - rollOffset);
-//   temp -> accX = (static_cast<float>(aaWorld.x) / 4096);
-//   temp -> accY = (static_cast<float>(aaWorld.y) / 4096);
-//   temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
-//   temp -> dpitch = 0; //temp
-//   temp -> daccZ = 0;  //temp
-//
-//   fifth = fourth;
-//   fourth = third;
-//   third = second;
-//   second = first;
-//   first = temp;
-//
-//   if (fifth != NULL){
-//     third -> dpitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
-//     third -> daccZ = (first->accZ - fifth->accZ)/(first->t - fifth->t);
-//   }
-// }
+// Buffer size for derivatives
+int bufferSize = 5;
+int bufferCenterOffset = bufferSize / 2;
 
 struct jumpNode{
   bool max; // if it's a max node this is true. False for min node.
@@ -417,6 +384,11 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         mtbbbData[n].dpitch = 0; //temp
         mtbbbData[n].daccZ = 0;  //temp
 
+        if(mtbbbData.size() >= bufferSize){
+          mtbbbData[n-bufferCenterOffset].dpitch = (mtbbbData[n].pitch - mtbbbData[n-(bufferSize-1)].pitch)/(mtbbbData[n].t - mtbbbData[n-(bufferSize-1)].t)
+          mtbbbData[n-bufferCenterOffset].daccZ = (mtbbbData[n].accZ - mtbbbData[n-(bufferSize-1)].accZ)/(mtbbbData[n].t - mtbbbData[n-(bufferSize-1)].t)
+        }
+
         // GPS data acquisition
         timestamp_t ts { gpsd_data->fix.time };
 
@@ -438,7 +410,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         }
 
         // Print data to terminal (debugging)
-        std::cout << std::fixed << std::setprecision(2) << "ypr: " << mtbbbData.back().yaw << "," << mtbbbData.back().pitch << "," << mtbbbData.back().roll << std::endl;
+        std::cout << std::fixed << std::setprecision(2) << "ypdr: " << mtbbbData.back().yaw << "," << mtbbbData.back().pitch << "," << mtbbbData.back().dpitch << "," << mtbbbData.back().roll << std::endl;
 
         // check for new max speed
         // if(mtbbbData[n].speed > maxSpeed){
