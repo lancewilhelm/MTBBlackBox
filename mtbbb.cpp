@@ -93,7 +93,7 @@ struct mtbbbDataStruct {
 };
 
 // Initialize the data structure
-vector<mtbbbDataStruct> mtbbbData;
+std::vector<mtbbbDataStruct> mtbbbData;
 
 // Buffer for data writing. This is necessary for live derivative.
 // struct bufferNode{
@@ -346,7 +346,7 @@ void setup() {
 
 void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_resolution_clock::time_point &t1, gpsmm &gps_rec) {
 
-    / Saves some typing and confusion
+    // Saves some typing and confusion
     using namespace std;
     // if programming failed, don't try to do anything
     if (!dmpReady) return;
@@ -452,28 +452,24 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         osss << std::put_time(&tm, "%H:%M:%S");
         auto oled_time_str { osss.str() };
 
-        // Output some things once the buffer fills
-        if(fifth != NULL){
-          // Ouput GPS data
-          std::setprecision(6);
-          std::cout.setf(std::ios::fixed, std::ios::floatfield);
-          if(seconds == 0 || newGPSData == false){
-            // myfile << "," << "," << "," << "," << ","; // << std::endl;
-          } else {
-            // myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << ","; // << std::endl;
-          }
-
-          // // Jump calculations
-          // if(fourth->daccZ > 0 && mtbbbData->daccZ <= 0 && mtbbbData->accZ > jumpMaxThreshold){
-          //   createJumpNode(duration.count(),true,myfile);  // jump maximum (takeoff)
-          // } else if (fourth->daccZ < 0 && mtbbbData->daccZ >= 0 && mtbbbData->accZ < jumpMinThreshold){
-          //   createJumpNode(duration.count(),false,myfile); // jump minimum (landing)
-          // } else {
-          //   myfile << "," << std::endl;
-          // }
+        // Ouput GPS data
+        std::setprecision(6);
+        std::cout.setf(std::ios::fixed, std::ios::floatfield);
+        if(seconds == 0 || newGPSData == false){
+          // myfile << "," << "," << "," << "," << ","; // << std::endl;
         } else {
-
+          // myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << ","; // << std::endl;
         }
+
+        // // Jump calculations
+        // if(fourth->daccZ > 0 && mtbbbData->daccZ <= 0 && mtbbbData->accZ > jumpMaxThreshold){
+        //   createJumpNode(duration.count(),true,myfile);  // jump maximum (takeoff)
+        // } else if (fourth->daccZ < 0 && mtbbbData->daccZ >= 0 && mtbbbData->accZ < jumpMinThreshold){
+        //   createJumpNode(duration.count(),false,myfile); // jump minimum (landing)
+        // } else {
+        //   myfile << "," << std::endl;
+        // }
+
 
         // If we have received new GPS data, update the screen (equates to 1Hz screen updates)
         if(newGPSData){ //fix this
