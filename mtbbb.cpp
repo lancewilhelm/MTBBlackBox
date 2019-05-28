@@ -414,26 +414,12 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           std::cout << std::fixed << std::setprecision(2) << "ypdr: " << mtbbbData[n-bufferCenterOffset].yaw << "," << mtbbbData[n-bufferCenterOffset].pitch << "," << mtbbbData[n-bufferCenterOffset].dpitch << "," << mtbbbData[n-bufferCenterOffset].roll << std::endl;
         }
 
-
-        // check for new max speed
-        // if(mtbbbData[n].speed > maxSpeed){
-        //   maxSpeed = mtbbbData[n].speed;
-        //   std::ostringstream stream;
-        //   stream << std::fixed << std::setprecision(2) << maxSpeed;
-        //   maxSpeedStr = stream.str();
-        // }
-
-        std::ostringstream osss;
-        osss << std::put_time(&tm, "%H:%M:%S");
-        auto oled_time_str { osss.str() };
-
-        // Ouput GPS data
-        std::setprecision(6);
-        std::cout.setf(std::ios::fixed, std::ios::floatfield);
-        if(seconds == 0 || newGPSData == false){
-          // myfile << "," << "," << "," << "," << ","; // << std::endl;
-        } else {
-          // myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << ","; // << std::endl;
+        check for new max speed
+        if(mtbbbData[n].speed > maxSpeed){
+          maxSpeed = mtbbbData[n].speed;
+          std::ostringstream stream;
+          stream << std::fixed << std::setprecision(2) << maxSpeed;
+          maxSpeedStr = stream.str();
         }
 
         // // Jump calculations
@@ -445,9 +431,13 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         //   myfile << "," << std::endl;
         // }
 
-
         // If we have received new GPS data, update the screen (equates to 1Hz screen updates)
         if(newGPSData){ //fix this
+
+          // Format the time for the OLED screen
+          std::ostringstream osss;
+          osss << std::put_time(&tm, "%H:%M:%S");
+          auto oled_time_str { osss.str() };
 
           std::string maxSpeedLine = "Max Sp: " + maxSpeedStr;
           // std::string jumpLine = "Jumps: " + std::to_string(numberOfJumps);
