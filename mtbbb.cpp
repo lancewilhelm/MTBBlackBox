@@ -77,9 +77,13 @@ float jumpMaxThreshold = 1;
 bool possibleJumpEvent = false;
 int jumpEventMaxLoc = 0;
 int jumpEventMinLoc = 0;
-float hangtime;
 float maxHangtime = 0;
+float maxWhip = 0;
+float maxTable = 0;
+
 std::string maxHangtimeStr;
+std::string maxWhipStr;
+std::string maxTableStr;
 
 // -----------MTBBB Data Structure--------------
 struct mtbbbDataStruct {
@@ -322,10 +326,47 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
             std::cout << "JUMP" << std::endl;
             numberOfJumps += 1;
 
+            float initialYaw = mtbbbData[jumpEventMaxLoc].yaw;
+            float intialRoll = mtbbbData[jumpEventMaxLoc].roll;
+            float whipDeflection = 0;
+            float tableDeflection = 0;
+
             // iterate over the range to mark the jump and calculate whip and table
             for (int i = jumpEventMaxLoc; i < jumpEventMinLoc; i++){
               mtbbbData[i].jump = 1;
+
+              // Calculate whip
+              if (abs(mtbbbData[i].yaw - initialYaw) > whipDeflection){
+                whipDeflection = abs(mtbbbData[i].yaw - initialYaw);
+              }
+
+              // Calculate table
+              if (abs(mtbbbData[i].roll - initialRoll) > tableDeflection){
+                tableDeflection = abs(mtbbbData[i].roll - initialRoll);
+              }
             }
+
+            // Record whip
+            mtbbbData[jumpEventMinLoc].whip = whipDeflection;
+            if (mtbbbData[jumpEventMinLoc].whip > maxWhip){
+              maxWhip = mtbbbData[jumpEventMinLoc].whip;
+            }
+
+            // Write Max Whip String
+            std::ostringstream stream;
+            stream << std::fixed << std::setprecision(1) << maxWhip;
+            maxWhipStr = stream.str();
+
+            // Record table
+            mtbbbData[jumpEventMinLoc].table = tableDeflection;
+            if (mtbbbData[jumpEventMinLoc].table > maxTable){
+              maxTable = mtbbbData[jumpEventMinLoc].table;
+            }
+
+            // Write Max Table String
+            std::ostringstream stream;
+            stream << std::fixed << std::setprecision(1) << maxTable;
+            maxTableStr = stream.str();
 
             // Calculate hangtime and maxHangtime
             mtbbbData[jumpEventMinLoc].hangtime = mtbbbData[jumpEventMinLoc].t - mtbbbData[jumpEventMaxLoc].t;
@@ -398,6 +439,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
           std::string maxSpeedLine = "Max Sp: " + maxSpeedStr;
           std::string jumpLine = "Jumps: " + std::to_string(numberOfJumps);
           std::string hangtimeLine = "Max Hang: " + maxHangtimeStr;
+          std::string whipTableLine = "Max W: " + maxWhipStr + ", T: " + maxTableStr;
 
           // display current GPS state
           if(seconds == 0){
@@ -409,6 +451,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
             oledWriteString(0,3,maxSpeedLine);
             oledWriteString(0,4,jumpLine);
             oledWriteString(0,5,hangtimeLine);
+            oledWriteString(0,6,whipTableLine);
           }
 
           newGPSData = false;
@@ -461,7 +504,7 @@ int main() {
           os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
           std::string filename = os.str();
           myfile.open (filename);
-          myfile << "t,yaw,pitch,dpitch,roll,accX,accdY,accdZ,daccZ,gpstime,lat,lon,speed,alt,jump,hangtime,whip,table\n";
+          myfile << "t,yaw,pitch,dpitch,roll,accX,accY,accZ,daccZ,gpstime,lat,lon,speed,alt,jump,hangtime,whip,table\n";
 
           // Write the data to the file
           for (int i = 0; i < mtbbbData.size(); i++){
@@ -518,7 +561,6 @@ int main() {
 
           // Reset Stats
           numberOfJumps = 0;
-          hangtime = 0;
           maxHangtime = 0;
           maxHangtimeStr = "";
           maxSpeed = 0;
