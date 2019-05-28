@@ -466,9 +466,24 @@ int main() {
           // Write the data to the file
           for (int i = 0; i < mtbbbData.size(); i++){
             myfile << std::fixed << std::setprecision(6) << mtbbbData[i].t << ",";
-            myfile << std::fixed << std::setprecision(2) << mtbbbData[i].yaw << "," << mtbbbData[i].pitch << "," << mtbbbData[i].dpitch << "," << mtbbbData[i].roll << "," << mtbbbData[i].accX << "," << mtbbbData[i].accY << "," << mtbbbData[i].accZ << "," << mtbbbData[i].daccZ << "," << mtbbbData[i].gpstime << "," << mtbbbData[i].lat << "," << mtbbbData[i].lon << "," << mtbbbData[i].speed << ",";
-            myfile << std::fixed << std::setprecision(2) << mtbbbData[i].alt << "," << mtbbbData[i].jump << "," << mtbbbData[i].hangtime << "," << mtbbbData[i].whip << "," << mtbbbData[i].table << std::endl;
-          }
+            myfile << std::fixed << std::setprecision(2) << mtbbbData[i].yaw << "," << mtbbbData[i].pitch << "," << mtbbbData[i].dpitch << "," << mtbbbData[i].roll << "," << mtbbbData[i].accX << "," << mtbbbData[i].accY << "," << mtbbbData[i].accZ << "," << mtbbbData[i].daccZ << ",";
+
+            // don't print GPS blanks
+            if (mtbbbData[i].lat != 0){
+              myfile << mtbbbData[i].gpstime << "," << mtbbbData[i].lat << "," << mtbbbData[i].lon << "," << mtbbbData[i].speed << "," << std::fixed << std::setprecision(2) << mtbbbData[i].alt << ",";
+            } else {
+              myfile << ",,,,,"
+            }
+
+            myfile << mtbbbData[i].jump << ",";
+
+            // don't print blank jump data
+            if (mtbbbData[i].hangtime != 0){
+              myfile << mtbbbData[i].hangtime << "," << mtbbbData[i].whip << "," << mtbbbData[i].table << std::endl;
+            } else {
+              myfile << ",," << std::endl;
+            }
+          } // end for()
 
           // Close the file
           myfile.close();
