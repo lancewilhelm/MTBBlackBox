@@ -513,7 +513,9 @@ int main() {
 
             // don't print GPS blanks
             if (mtbbbData[i].lat != 0){
-              myfile << mtbbbData[i].gpstime << "," << std::fixed << std::setprecision(6) mtbbbData[i].lat << "," << mtbbbData[i].lon << "," << std::fixed << std::setprecision(2) << mtbbbData[i].speed << "," << std::fixed << std::setprecision(2) << mtbbbData[i].alt << ",";
+              myfile << mtbbbData[i].gpstime << ",";
+              myfile << std::fixed << std::setprecision(6) mtbbbData[i].lat << "," << mtbbbData[i].lon << ",";
+              myfile << std::fixed << std::setprecision(2) << mtbbbData[i].speed << "," << mtbbbData[i].alt << ",";
             } else {
               myfile << ",,,,,";
             }
