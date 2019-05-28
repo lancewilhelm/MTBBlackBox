@@ -346,46 +346,45 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         }
 
         // Jump calculations
-        if (possibleJumpEvent && mtbbbData[n].accZ >= 0 && jumpEventMaxLoc != 0){
-          // We have detected a full jump. Does not address drops yet, although drops might trigger this
-          numberOfJumps += 1;
-
-          // iterate over the range to mark the jump and calculate whip and table
-          for (int i = jumpEventMaxLoc; i < jumpEventMinLoc; i++){
-            mtbbbData[i].jump = 1;
-          }
-
-          // Calculate hangtime and maxHangtime
-          mtbbbData[jumpEventMinLoc].hangtime = mtbbbData[jumpEventMinLoc].t - mtbbbData[jumpEventMaxLoc].t;
-          if (mtbbbData[jumpEventMinLoc].hangtime > maxHangtime){
-            maxHangtime = mtbbbData[jumpEventMinLoc].hangtime;
-          }
-
-          // Write Max Hangtime String
-          std::ostringstream stream;
-          stream << std::fixed << std::setprecision(2) << maxHangtime;
-          maxHangtimeStr = stream.str();
-
-          // Reset values
-          possibleJumpEvent = false;
-          jumpEventMaxLoc = 0;
-          jumpEventMinLoc = 0;
-
-        }
-        else if (mtbbbData[n-(bufferCenterOffset+1)].daccZ > 0 && mtbbbData[n-bufferCenterOffset].daccZ <= 0 && mtbbbData[n-bufferCenterOffset].accZ > jumpMaxThreshold){
-          mtbbbData[n-bufferCenterOffset].jumpMinMaxEvent = 1; // jump maximum (takeoff). Used for debugging
-
-          jumpEventMaxLoc = n - bufferCenterOffset;
-        } else if (mtbbbData[n-(bufferCenterOffset+1)].daccZ < 0 && mtbbbData[n-bufferCenterOffset].daccZ >= 0 && mtbbbData[n-bufferCenterOffset].accZ < jumpMinThreshold){
-          mtbbbData[n-bufferCenterOffset].jumpMinMaxEvent = -1; // jump minimum (landing). Used for debugging
-
-          // Flag for a possible finish of a jump
-          possibleJumpEvent = true;
-          jumpEventMinLoc = n - bufferCenterOffset;
-
-        } else {
-          mtbbbData[n-bufferCenterOffset].jumpMinMaxEvent = 0; // no jump event
-        }
+        // if (possibleJumpEvent && mtbbbData[n].accZ >= 0 && jumpEventMaxLoc != 0){
+        //   // We have detected a full jump. Does not address drops yet, although drops might trigger this
+        //   numberOfJumps += 1;
+        //
+        //   // iterate over the range to mark the jump and calculate whip and table
+        //   for (int i = jumpEventMaxLoc; i < jumpEventMinLoc; i++){
+        //     mtbbbData[i].jump = 1;
+        //   }
+        //
+        //   // Calculate hangtime and maxHangtime
+        //   mtbbbData[jumpEventMinLoc].hangtime = mtbbbData[jumpEventMinLoc].t - mtbbbData[jumpEventMaxLoc].t;
+        //   if (mtbbbData[jumpEventMinLoc].hangtime > maxHangtime){
+        //     maxHangtime = mtbbbData[jumpEventMinLoc].hangtime;
+        //   }
+        //
+        //   // Write Max Hangtime String
+        //   std::ostringstream stream;
+        //   stream << std::fixed << std::setprecision(2) << maxHangtime;
+        //   maxHangtimeStr = stream.str();
+        //
+        //   // Reset values
+        //   possibleJumpEvent = false;
+        //   jumpEventMaxLoc = 0;
+        //   jumpEventMinLoc = 0;
+        //
+        // } else if (mtbbbData[n-(bufferCenterOffset+1)].daccZ > 0 && mtbbbData[n-bufferCenterOffset].daccZ <= 0 && mtbbbData[n-bufferCenterOffset].accZ > jumpMaxThreshold){
+        //   mtbbbData[n-bufferCenterOffset].jumpMinMaxEvent = 1; // jump maximum (takeoff). Used for debugging
+        //
+        //   jumpEventMaxLoc = n - bufferCenterOffset;
+        // } else if (mtbbbData[n-(bufferCenterOffset+1)].daccZ < 0 && mtbbbData[n-bufferCenterOffset].daccZ >= 0 && mtbbbData[n-bufferCenterOffset].accZ < jumpMinThreshold){
+        //   mtbbbData[n-bufferCenterOffset].jumpMinMaxEvent = -1; // jump minimum (landing). Used for debugging
+        //
+        //   // Flag for a possible finish of a jump
+        //   possibleJumpEvent = true;
+        //   jumpEventMinLoc = n - bufferCenterOffset;
+        //
+        // } else {
+        //   mtbbbData[n-bufferCenterOffset].jumpMinMaxEvent = 0; // no jump event
+        // } // end of jump if statement
 
         // If we have received new GPS data, update the screen (equates to 1Hz screen updates)
         if(newGPSData){ //fix this
