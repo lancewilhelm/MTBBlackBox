@@ -314,11 +314,12 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           mtbbbData[n-bufferCenterOffset].daccZ = (mtbbbData[n].accZ - mtbbbData[n-(bufferSize-1)].accZ)/(mtbbbData[n].t - mtbbbData[n-(bufferSize-1)].t);
 
           // Terminal output for debugging
-          std::cout << std::fixed << std::setprecision(2) << "ypdr: " << mtbbbData[n-bufferCenterOffset].yaw << "," << mtbbbData[n-bufferCenterOffset].pitch << "," << mtbbbData[n-bufferCenterOffset].dpitch << "," << mtbbbData[n-bufferCenterOffset].roll << std::endl;
+          // std::cout << std::fixed << std::setprecision(2) << "ypdr: " << mtbbbData[n-bufferCenterOffset].yaw << "," << mtbbbData[n-bufferCenterOffset].pitch << "," << mtbbbData[n-bufferCenterOffset].dpitch << "," << mtbbbData[n-bufferCenterOffset].roll << std::endl;
 
           // Jump calculations
           if (possibleJumpEvent && mtbbbData[n].accZ >= 0 && jumpEventMaxLoc != 0){
             // We have detected a full jump. Does not address drops yet, although drops might trigger this
+            std::cout << "JUMP" << std::endl;
             numberOfJumps += 1;
 
             // iterate over the range to mark the jump and calculate whip and table
@@ -428,17 +429,6 @@ int main() {
     std::chrono::time_point<std::chrono::high_resolution_clock> t0, t1;
     t0 = std::chrono::high_resolution_clock::now();
 
-    // Initialize file for recording
-    std::ofstream myfile;
-
-    // Open the file
-    std::chrono::seconds timestamp = std::chrono::duration_cast< std::chrono::seconds >(std::chrono::system_clock::now().time_since_epoch());
-    std::ostringstream os;
-    os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
-    std::string filename = os.str();
-    myfile.open (filename);
-    myfile << "t,yaw,pitch,dpitch,roll,aworldX,aworldY,aworldZ,daworldZ,gpstime,lat,lon,speed,alt,jump,hangtime\n";
-
     // Initialize GPS
     gpsmm gps_rec("localhost", DEFAULT_GPSD_PORT);
 
@@ -462,6 +452,24 @@ int main() {
         if(digitalRead(BUTTON) == HIGH){
           oledWriteString(2,7,"Ending MTBBB....");
 
+          // Initialize file for recording
+          std::ofstream myfile;
+
+          // Open the file
+          std::chrono::seconds timestamp = std::chrono::duration_cast< std::chrono::seconds >(std::chrono::system_clock::now().time_since_epoch());
+          std::ostringstream os;
+          os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
+          std::string filename = os.str();
+          myfile.open (filename);
+          myfile << "t,yaw,pitch,dpitch,roll,accX,accdY,accdZ,daccZ,gpstime,lat,lon,speed,alt,jump,hangtime,whip,table\n";
+
+          // Write the data to the file
+          for (int i = 0; i < mtbbbData.size(); i++){
+            myfile << std::fixed << std::setprecision(6) << mtbbbData[i].t << ",";
+            myfile << std::fixed << std::setprecision(2) << mtbbbData[i].yaw << "," << mtbbbData[i].pitch << "," << mtbbbData[i].dpitch << "," << mtbbbData[i].roll << "," << mtbbbData[i].accX << "," << mtbbbData[i].accY << "," << mtbbbData[i].accZ << "," << mtbbbData[i].daccZ << "," << mtbbbData[i].gpstime << "," << mtbbbData[i].lat << "," << mtbbbData[i].lon << "," << mtbbbData[i].speed << ",";
+            myfile << std::fixed << std::setprecision(2) << mtbbbData[i].alt << "," << mtbbbData[i].jhump << "," << mtbbbData[i].hangtime << "," << mtbbbData[i].whip << "," << mtbbbData[i].table << std::endl;
+          }
+          
           // Close the file
           myfile.close();
 
