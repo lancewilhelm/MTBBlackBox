@@ -409,8 +409,11 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           mtbbbData[n].alt = gpsd_data->fix.altitude * METERS_TO_FEET;
         }
 
-        // Print data to terminal (debugging)
-        std::cout << std::fixed << std::setprecision(2) << "ypdr: " << mtbbbData.back().yaw << "," << mtbbbData.back().pitch << "," << mtbbbData.back().dpitch << "," << mtbbbData.back().roll << std::endl;
+        // Print data to terminal (debugging). Wait for the buffer to fill first so we can display the middle data
+        if(mtbbbData.size() >= bufferSize){
+          std::cout << std::fixed << std::setprecision(2) << "ypdr: " << mtbbbData[n-bufferCenterOffset].yaw << "," << mtbbbData[n-bufferCenterOffset].pitch << "," << mtbbbData[n-bufferCenterOffset].dpitch << "," << mtbbbData[n-bufferCenterOffset].roll << std::endl;
+        }
+
 
         // check for new max speed
         // if(mtbbbData[n].speed > maxSpeed){
