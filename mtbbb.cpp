@@ -18,6 +18,12 @@
 #include "MPU6050_6Axis_MotionApps20.h"
 #include <csignal>
 #include "oled96.h"
+#include <vector>
+
+// Define for the LEDS
+#define GREEN 0
+#define RED 1
+#define BUTTON 4
 
 // class default I2C address is 0x68
 // specific I2C addresses may be passed as a parameter here
@@ -77,40 +83,52 @@ float hangtime;
 float maxHangtime = 0;
 std::string maxHangtimeStr;
 
-// Buffer for data writing. This is necessary for live derivative.
-struct bufferNode{
-  float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ;
+// myfile << "t,yaw,pitch,dpitch,roll,aworldX,aworldY,aworldZ,daworldZ,gpstime,lat,lon,speed,alt,jump,hangtime\n";
+
+// -----------MTBBB Data Structure--------------
+struct mtbbbDataStruct {
+  float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ, lat, lon, speed, alt, hangtime;
+  int jump;
+  std::string gpstime;
 };
 
-bufferNode *first = NULL;
-bufferNode *second = NULL;
-bufferNode *third = NULL;
-bufferNode *fourth = NULL;
-bufferNode *fifth = NULL;
+// Initialize the data structure
+vector<mtbbbDataStruct> mtbbbData;
 
-void createBufferNode(float time){
-  bufferNode *temp = new bufferNode;
-  temp -> t = time;
-  temp -> yaw = (ypr[0] * 180/M_PI);
-  temp -> pitch = ((ypr[1] * 180/M_PI) - pitchOffset);
-  temp -> roll = ((ypr[2] * 180/M_PI) - rollOffset);
-  temp -> accX = (static_cast<float>(aaWorld.x) / 4096);
-  temp -> accY = (static_cast<float>(aaWorld.y) / 4096);
-  temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
-  temp -> dpitch = 0; //temp
-  temp -> daccZ = 0;  //temp
-
-  fifth = fourth;
-  fourth = third;
-  third = second;
-  second = first;
-  first = temp;
-
-  if (fifth != NULL){
-    third -> dpitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
-    third -> daccZ = (first->accZ - fifth->accZ)/(first->t - fifth->t);
-  }
-}
+// Buffer for data writing. This is necessary for live derivative.
+// struct bufferNode{
+//   float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ;
+// };
+//
+// bufferNode *first = NULL;
+// bufferNode *second = NULL;
+// bufferNode *third = NULL;
+// bufferNode *fourth = NULL;
+// bufferNode *fifth = NULL;
+//
+// void createBufferNode(float time){
+//   bufferNode *temp = new bufferNode;
+//   temp -> t = time;
+//   temp -> yaw = (ypr[0] * 180/M_PI);
+//   temp -> pitch = ((ypr[1] * 180/M_PI) - pitchOffset);
+//   temp -> roll = ((ypr[2] * 180/M_PI) - rollOffset);
+//   temp -> accX = (static_cast<float>(aaWorld.x) / 4096);
+//   temp -> accY = (static_cast<float>(aaWorld.y) / 4096);
+//   temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
+//   temp -> dpitch = 0; //temp
+//   temp -> daccZ = 0;  //temp
+//
+//   fifth = fourth;
+//   fourth = third;
+//   third = second;
+//   second = first;
+//   first = temp;
+//
+//   if (fifth != NULL){
+//     third -> dpitch = (first->pitch - fifth->pitch)/(first->t - fifth->t);
+//     third -> daccZ = (first->accZ - fifth->accZ)/(first->t - fifth->t);
+//   }
+// }
 
 struct jumpNode{
   bool max; // if it's a max node this is true. False for min node.
@@ -187,11 +205,6 @@ void createJumpNode(float time, bool max, std::ofstream &myfile){
     myfile << "," << std::endl;
   }
 } // end creatJumpNode()
-
-// Define for the LEDS
-#define GREEN 0
-#define RED 1
-#define BUTTON 4
 
 // ================================================================
 // ===                      FUNCTIONS                           ===
@@ -332,6 +345,9 @@ void setup() {
 // ================================================================
 
 void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_resolution_clock::time_point &t1, gpsmm &gps_rec) {
+
+    / Saves some typing and confusion
+    using namespace std;
     // if programming failed, don't try to do anything
     if (!dmpReady) return;
 
@@ -374,12 +390,16 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         digitalWrite(RED, LOW);
         digitalWrite(GREEN, HIGH);
 
+        //--------------------------Data Acquisition---------------------------
+        // Create a new vector entry for data
+        mtbbbData.push_back(mtbbbDataStruct())
+        int n = mtbbbData.size() - 1; // Gets current count for reference
+
         // Record the time
         t1 = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> duration = t1 - t0;
-        myfile << std::setprecision(6) << duration.count() << ",";
 
-        // Gather data from dmp
+        // MPU6050 DMP data acquisition
         mpu.dmpGetQuaternion(&q, fifoBuffer);
         mpu.dmpGetAccel(&aa, fifoBuffer);
         mpu.dmpGetGravity(&gravity, &q);
@@ -387,44 +407,46 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
         mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
 
-        // Add to buffer
-        createBufferNode(duration.count());
+        mtbbbData[n].t = duration.count();
+        mtbbbData[n].yaw = (ypr[0] * 180/M_PI);
+        mtbbbData[n].pitch = ((ypr[1] * 180/M_PI) - pitchOffset);
+        mtbbbData[n].roll = ((ypr[2] * 180/M_PI) - rollOffset);
+        mtbbbData[n].accX = (static_cast<float>(aaWorld.x) / 4096);
+        mtbbbData[n].accY = (static_cast<float>(aaWorld.y) / 4096);
+        mtbbbData[n].accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
+        mtbbbData[n].dpitch = 0; //temp
+        mtbbbData[n].daccZ = 0;  //temp
 
-        // Display as long as the buffer is full
-        if(fifth != NULL){
-          // YPR
-          // std::cout << std::fixed << std::setprecision(2) << "ypdr: " << third->yaw << "," << third->pitch << "," << third->dpitch << "," << third->roll << std::endl;
-          myfile << std::fixed << std::setprecision(2) << third->yaw << "," << third->pitch << "," << third->dpitch << "," << third->roll << ",";
-
-          // Acc
-          myfile << third->accX << "," << third->accY << "," << third->accZ << "," << third->daccZ << ",";
-        } else {
-          myfile << "," << "," << "," << "," << "," << "," << ",";
-        }
-
-        // Display and wriet the GPS data
+        // GPS data acquisition
         timestamp_t ts { gpsd_data->fix.time };
-        auto latitude  { gpsd_data->fix.latitude };
-        auto longitude { gpsd_data->fix.longitude };
-        auto speed     { gpsd_data->fix.speed * MPS_TO_MPH};
-        auto alt       { gpsd_data->fix.altitude * METERS_TO_FEET};
-
-        // check for new max speed
-        if(speed > maxSpeed){
-          maxSpeed = speed;
-          std::ostringstream stream;
-          stream << std::fixed << std::setprecision(2) << maxSpeed;
-          maxSpeedStr = stream.str();
-        }
 
         // convert GPSD's timestamp_t into time_t
         time_t seconds { (time_t)ts };
         seconds -= 25200; // 7 hour correction for time zone
-        auto   tm = *std::localtime(&seconds);
+        auto tm = *std::localtime(&seconds);
 
         std::ostringstream oss;
         oss << std::put_time(&tm, "%d-%m-%Y %H:%M:%S");
         auto time_str { oss.str() };
+
+        if(newGPSData){
+          mtbbbData[n].gpstime = time_str;
+          mtbbbData[n].lat = gpsd_data->fix.latitude;
+          mtbbbData[n].lon = gpsd_data->fix.longitude;
+          mtbbbData[n].speed = gpsd_data->fix.speed * MPS_TO_MPH;
+          mtbbbData[n].alt = gpsd_data->fix.altitude * METERS_TO_FEET;
+        }
+
+        // Print data to terminal (debugging)
+        std::cout << std::fixed << std::setprecision(2) << "ypr: " << mtbbbData.back().yaw << "," << mtbbbData.back().pitch << "," << mtbbbData.back().roll << std::endl;
+
+        // check for new max speed
+        // if(mtbbbData[n].speed > maxSpeed){
+        //   maxSpeed = mtbbbData[n].speed;
+        //   std::ostringstream stream;
+        //   stream << std::fixed << std::setprecision(2) << maxSpeed;
+        //   maxSpeedStr = stream.str();
+        // }
 
         std::ostringstream osss;
         osss << std::put_time(&tm, "%H:%M:%S");
@@ -435,31 +457,30 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           // Ouput GPS data
           std::setprecision(6);
           std::cout.setf(std::ios::fixed, std::ios::floatfield);
-          //std::cout << "gpsTime: " << time_str << ", Lat: " << latitude << ",  Lon: " << longitude << ", Sp: " << speed << ", Alt: " << alt << std::endl;
           if(seconds == 0 || newGPSData == false){
-            myfile << "," << "," << "," << "," << ","; // << std::endl;
+            // myfile << "," << "," << "," << "," << ","; // << std::endl;
           } else {
-            myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << ","; // << std::endl;
+            // myfile << std::setprecision(6) << time_str << "," << latitude << "," << longitude << "," << speed << "," << alt << ","; // << std::endl;
           }
 
-          // Jump calculations
-          if(fourth->daccZ > 0 && third->daccZ <= 0 && third->accZ > jumpMaxThreshold){
-            createJumpNode(duration.count(),true,myfile);  // jump maximum (takeoff)
-          } else if (fourth->daccZ < 0 && third->daccZ >= 0 && third->accZ < jumpMinThreshold){
-            createJumpNode(duration.count(),false,myfile); // jump minimum (landing)
-          } else {
-            myfile << "," << std::endl;
-          }
+          // // Jump calculations
+          // if(fourth->daccZ > 0 && mtbbbData->daccZ <= 0 && mtbbbData->accZ > jumpMaxThreshold){
+          //   createJumpNode(duration.count(),true,myfile);  // jump maximum (takeoff)
+          // } else if (fourth->daccZ < 0 && mtbbbData->daccZ >= 0 && mtbbbData->accZ < jumpMinThreshold){
+          //   createJumpNode(duration.count(),false,myfile); // jump minimum (landing)
+          // } else {
+          //   myfile << "," << std::endl;
+          // }
         } else {
-          myfile << "," << "," << "," << "," << "," << "," << std::endl;
+
         }
 
         // If we have received new GPS data, update the screen (equates to 1Hz screen updates)
         if(newGPSData){ //fix this
 
           std::string maxSpeedLine = "Max Sp: " + maxSpeedStr;
-          std::string jumpLine = "Jumps: " + std::to_string(numberOfJumps);
-          std::string hangtimeLine = "Max Hang: " + maxHangtimeStr;
+          // std::string jumpLine = "Jumps: " + std::to_string(numberOfJumps);
+          // std::string hangtimeLine = "Max Hang: " + maxHangtimeStr;
 
           // display current GPS state
           if(seconds == 0){
@@ -469,8 +490,8 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             oledWriteString(0,0,"GPS   ");
             oledWriteString(13,0,oled_time_str);
             oledWriteString(0,3,maxSpeedLine);
-            oledWriteString(0,4,jumpLine);
-            oledWriteString(0,5,hangtimeLine);
+            // oledWriteString(0,4,jumpLine);
+            // oledWriteString(0,5,hangtimeLine);
           }
 
           newGPSData = false;
