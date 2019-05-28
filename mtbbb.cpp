@@ -75,18 +75,16 @@ int numberOfJumps = 0;
 float jumpMinThreshold = -2;
 float jumpMaxThreshold = 1;
 bool possibleJumpEvent = false;
-float jumpEventMinTime;
-float jumpEventMinVal = 0;
-float jumpEventMaxTime;
-float jumpEventMaxVal = 0;
+int jumpEventMaxLoc = 0;
+int jumpEventMinLoc = 0;
 float hangtime;
 float maxHangtime = 0;
 std::string maxHangtimeStr;
 
 // -----------MTBBB Data Structure--------------
 struct mtbbbDataStruct {
-  float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ, lat, lon, speed, alt, hangtime;
-  int jump;
+  float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ, lat, lon, speed, alt, hangtime, whip, table;
+  int jump, jumpMinMaxEvent; // jump events as ints not bools so as to view in graph easier
   std::string gpstime;
 };
 
@@ -96,82 +94,6 @@ std::vector<mtbbbDataStruct> mtbbbData;
 // Buffer size for derivatives
 int bufferSize = 5;
 int bufferCenterOffset = bufferSize / 2;
-
-struct jumpNode{
-  bool max; // if it's a max node this is true. False for min node.
-  float t, accZ;
-  jumpNode *last;
-};
-
-jumpNode *head = NULL;
-
-void calculateJump(){
-  jumpNode *temp = new jumpNode;
-  temp = head->last;  //set our first node to the last one from head
-
-  bool complete = false;
-  while(!complete){
-    if(temp->max){
-      jumpEventMaxTime = temp->t;
-      jumpEventMaxVal = temp->accZ;
-      complete = true;
-    } else if (temp == NULL){ //emergency catch
-      std::cout << "end of jump list" << std::endl;
-      complete = true;
-    // } else if (temp->max && temp->accZ < jumpEventMaxVal){
-    //   complete = true;
-    } else {
-      temp = temp->last;
-    }
-  } // end while(!complete)
-
-  // Increase the jump counter and calculate hangtime
-  numberOfJumps += 1;
-  hangtime = jumpEventMinTime - jumpEventMaxTime;
-  std::cout << "JUMP " << std::to_string(jumpEventMaxVal) << std::endl;
-
-  // Update maxHangtime if necessary
-  if (hangtime > maxHangtime){
-    maxHangtime = hangtime;
-    std::ostringstream stream;
-    stream << std::fixed << std::setprecision(2) << maxHangtime;
-    maxHangtimeStr = stream.str();
-  }
-
-  // reset the variables
-  jumpEventMinVal = 0;
-  jumpEventMaxVal = 0;
-  possibleJumpEvent = false;
-
-} // end calculateJump()
-
-void createJumpNode(float time, bool max, std::ofstream &myfile){
-  std::cout << "JUMP NODE" << std::endl;
-  jumpNode *temp = new jumpNode;
-  temp -> t = time;
-  temp -> accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
-  temp -> max = max;
-  temp -> last = head;
-
-  // If we detected a min threshold breach, record it, and it's time and value
-  if (temp->max == false){
-    possibleJumpEvent = true;
-    jumpEventMinTime = temp->t;
-    jumpEventMinVal = temp->accZ;
-  }
-
-  // set head to temp node
-  head = temp;
-
-  // If we just completed a jump then do some calculations
-  if (possibleJumpEvent && temp->max == true){
-    std::cout << "CALC JUMP" << std::endl;
-    calculateJump();
-    myfile << numberOfJumps << "," << hangtime << std::endl;
-  } else {
-    myfile << "," << std::endl;
-  }
-} // end creatJumpNode()
 
 // ================================================================
 // ===                      FUNCTIONS                           ===
@@ -383,6 +305,7 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         mtbbbData[n].accZ = (static_cast<float>(aaWorld.z) / 4096) - 1;  // minus 1G for gravity
         mtbbbData[n].dpitch = 0; //temp
         mtbbbData[n].daccZ = 0;  //temp
+        mtbbbData[n].jump = 0; //temp
 
         if(mtbbbData.size() >= bufferSize){
           mtbbbData[n-bufferCenterOffset].dpitch = (mtbbbData[n].pitch - mtbbbData[n-(bufferSize-1)].pitch)/(mtbbbData[n].t - mtbbbData[n-(bufferSize-1)].t);
@@ -422,14 +345,47 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           maxSpeedStr = stream.str();
         }
 
-        // // Jump calculations
-        // if(fourth->daccZ > 0 && mtbbbData->daccZ <= 0 && mtbbbData->accZ > jumpMaxThreshold){
-        //   createJumpNode(duration.count(),true,myfile);  // jump maximum (takeoff)
-        // } else if (fourth->daccZ < 0 && mtbbbData->daccZ >= 0 && mtbbbData->accZ < jumpMinThreshold){
-        //   createJumpNode(duration.count(),false,myfile); // jump minimum (landing)
-        // } else {
-        //   myfile << "," << std::endl;
-        // }
+        // Jump calculations
+        if (possibleJumpEvent && mtbbbData[n].accZ >= 0 && jumpEventMaxLoc != 0){
+          // We have detected a full jump. Does not address drops yet, although drops might trigger this
+          numberOfJumps += 1;
+
+          // iterate over the range to mark the jump and calculate whip and table
+          for (int i = jumpEventMaxLoc; i < jumpEventMinLoc; i++){
+            mtbbbData[i].jump = 1;
+          }
+
+          // Calculate hangtime and maxHangtime
+          mtbbbData[jumpEventMinLoc].hangtime = mtbbbData[jumpEventMinLoc].t - mtbbbData[jumpEventMaxLoc].t;
+          if (mtbbbData[jumpEventMinLoc].hangtime > maxHangtime){
+            maxHangtime = mtbbbData[jumpEventMinLoc].hangtime;
+          }
+
+          // Write Max Hangtime String
+          std::ostringstream stream;
+          stream << std::fixed << std::setprecision(2) << maxHangtime;
+          maxHangtimeStr = stream.str();
+
+          // Reset values
+          possibleJumpEvent = false;
+          jumpEventMaxLoc = 0;
+          jumpEventMinLoc = 0;
+
+        }
+        else if (mtbbbData[n-(bufferCenterOffset+1)].daccZ > 0 && mtbbbData[n-bufferCenterOffset].daccZ <= 0 && mtbbbData[n-bufferCenterOffset].accZ > jumpMaxThreshold){
+          mtbbbData[n-bufferCenterOffset].jumpMinMaxEvent = 1; // jump maximum (takeoff). Used for debugging
+
+          jumpEventMaxLoc = n - bufferCenterOffset;
+        } else if (mtbbbData[n-(bufferCenterOffset+1)].daccZ < 0 && mtbbbData[n-bufferCenterOffset].daccZ >= 0 && mtbbbData[n-bufferCenterOffset].accZ < jumpMinThreshold){
+          mtbbbData[n-bufferCenterOffset].jumpMinMaxEvent = -1; // jump minimum (landing). Used for debugging
+
+          // Flag for a possible finish of a jump
+          possibleJumpEvent = true;
+          jumpEventMinLoc = n - bufferCenterOffset;
+
+        } else {
+          mtbbbData[n-bufferCenterOffset].jumpMinMaxEvent = 0; // no jump event
+        }
 
         // If we have received new GPS data, update the screen (equates to 1Hz screen updates)
         if(newGPSData){ //fix this
@@ -440,8 +396,8 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
           auto oled_time_str { osss.str() };
 
           std::string maxSpeedLine = "Max Sp: " + maxSpeedStr;
-          // std::string jumpLine = "Jumps: " + std::to_string(numberOfJumps);
-          // std::string hangtimeLine = "Max Hang: " + maxHangtimeStr;
+          std::string jumpLine = "Jumps: " + std::to_string(numberOfJumps);
+          std::string hangtimeLine = "Max Hang: " + maxHangtimeStr;
 
           // display current GPS state
           if(seconds == 0){
@@ -451,8 +407,8 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
             oledWriteString(0,0,"GPS   ");
             oledWriteString(13,0,oled_time_str);
             oledWriteString(0,3,maxSpeedLine);
-            // oledWriteString(0,4,jumpLine);
-            // oledWriteString(0,5,hangtimeLine);
+            oledWriteString(0,4,jumpLine);
+            oledWriteString(0,5,hangtimeLine);
           }
 
           newGPSData = false;
