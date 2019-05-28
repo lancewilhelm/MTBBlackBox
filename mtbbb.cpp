@@ -385,8 +385,8 @@ void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point 
         mtbbbData[n].daccZ = 0;  //temp
 
         if(mtbbbData.size() >= bufferSize){
-          mtbbbData[n-bufferCenterOffset].dpitch = (mtbbbData[n].pitch - mtbbbData[n-(bufferSize-1)].pitch)/(mtbbbData[n].t - mtbbbData[n-(bufferSize-1)].t)
-          mtbbbData[n-bufferCenterOffset].daccZ = (mtbbbData[n].accZ - mtbbbData[n-(bufferSize-1)].accZ)/(mtbbbData[n].t - mtbbbData[n-(bufferSize-1)].t)
+          mtbbbData[n-bufferCenterOffset].dpitch = (mtbbbData[n].pitch - mtbbbData[n-(bufferSize-1)].pitch)/(mtbbbData[n].t - mtbbbData[n-(bufferSize-1)].t);
+          mtbbbData[n-bufferCenterOffset].daccZ = (mtbbbData[n].accZ - mtbbbData[n-(bufferSize-1)].accZ)/(mtbbbData[n].t - mtbbbData[n-(bufferSize-1)].t);
         }
 
         // GPS data acquisition
