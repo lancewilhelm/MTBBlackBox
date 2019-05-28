@@ -556,25 +556,21 @@ int main() {
       } else {
         // Check for button press. Start program
         if(digitalRead(BUTTON) == HIGH){
+          // Clear the previous data
+          mtbbbData.clear();
+
           // Initialize new t0
           t0 = std::chrono::high_resolution_clock::now();
 
           // Reset Stats
           numberOfJumps = 0;
           maxHangtime = 0;
-          maxHangtimeStr = "";
+          maxWhip = 0;
+          maxTable = 0;
           maxSpeed = 0;
-
-          // Initialize file for recording
-          std::ofstream myfile;
-
-          // Open the file and write header. May want to reconsider file naming
-          std::chrono::seconds timestamp = std::chrono::duration_cast< std::chrono::seconds >(std::chrono::system_clock::now().time_since_epoch());
-          std::ostringstream os;
-          os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
-          std::string filename = os.str();
-          myfile.open (filename);
-          myfile << "t,yaw,pitch,roll,aworldX,aworldY,aworldZ,gpstime,lat,lon,speed,alt,overflow\n";
+          maxHangtimeStr = "";
+          maxWhipStr = "";
+          maxTableStr = "";
 
           // Clear display before starting
           oledFill(0x00);
