@@ -556,6 +556,13 @@ int main() {
           // Initialize new t0
           t0 = std::chrono::high_resolution_clock::now();
 
+          // Reset Stats
+          numberOfJumps = 0;
+          hangtime = 0;
+          maxHangtime = 0;
+          maxHangtimeStr = "";
+          maxSpeed = 0;
+
           // Initialize file for recording
           std::ofstream myfile;
 
