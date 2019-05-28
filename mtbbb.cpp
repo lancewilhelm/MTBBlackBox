@@ -233,7 +233,7 @@ void setup() {
 // ===                    MAIN PROGRAM LOOP                     ===
 // ================================================================
 
-void loop(std::ofstream &myfile, std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_resolution_clock::time_point &t1, gpsmm &gps_rec) {
+void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_resolution_clock::time_point &t1, gpsmm &gps_rec) {
 
     // Saves some typing and confusion
     using namespace std;
@@ -446,7 +446,7 @@ int main() {
     while(true){
       if (runLoop){
         // Run the main loop
-        loop(myfile, t0, t1, gps_rec);
+        loop(t0, t1, gps_rec);
 
         // Check for button press. End program
         if(digitalRead(BUTTON) == HIGH){
@@ -469,7 +469,7 @@ int main() {
             myfile << std::fixed << std::setprecision(2) << mtbbbData[i].yaw << "," << mtbbbData[i].pitch << "," << mtbbbData[i].dpitch << "," << mtbbbData[i].roll << "," << mtbbbData[i].accX << "," << mtbbbData[i].accY << "," << mtbbbData[i].accZ << "," << mtbbbData[i].daccZ << "," << mtbbbData[i].gpstime << "," << mtbbbData[i].lat << "," << mtbbbData[i].lon << "," << mtbbbData[i].speed << ",";
             myfile << std::fixed << std::setprecision(2) << mtbbbData[i].alt << "," << mtbbbData[i].jhump << "," << mtbbbData[i].hangtime << "," << mtbbbData[i].whip << "," << mtbbbData[i].table << std::endl;
           }
-          
+
           // Close the file
           myfile.close();
 
