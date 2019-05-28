@@ -327,7 +327,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
             numberOfJumps += 1;
 
             float initialYaw = mtbbbData[jumpEventMaxLoc].yaw;
-            float intialRoll = mtbbbData[jumpEventMaxLoc].roll;
+            float initialRoll = mtbbbData[jumpEventMaxLoc].roll;
             float whipDeflection = 0;
             float tableDeflection = 0;
 
@@ -364,9 +364,9 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
             }
 
             // Write Max Table String
-            std::ostringstream stream;
-            stream << std::fixed << std::setprecision(1) << maxTable;
-            maxTableStr = stream.str();
+            std::ostringstream stream2;
+            stream2 << std::fixed << std::setprecision(1) << maxTable;
+            maxTableStr = stream2.str();
 
             // Calculate hangtime and maxHangtime
             mtbbbData[jumpEventMinLoc].hangtime = mtbbbData[jumpEventMinLoc].t - mtbbbData[jumpEventMaxLoc].t;
@@ -375,9 +375,9 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
             }
 
             // Write Max Hangtime String
-            std::ostringstream stream;
-            stream << std::fixed << std::setprecision(2) << maxHangtime;
-            maxHangtimeStr = stream.str();
+            std::ostringstream stream3;
+            stream3 << std::fixed << std::setprecision(2) << maxHangtime;
+            maxHangtimeStr = stream3.str();
 
             // Reset values
             possibleJumpEvent = false;
