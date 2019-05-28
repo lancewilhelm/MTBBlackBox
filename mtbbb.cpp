@@ -467,7 +467,7 @@ int main() {
           for (int i = 0; i < mtbbbData.size(); i++){
             myfile << std::fixed << std::setprecision(6) << mtbbbData[i].t << ",";
             myfile << std::fixed << std::setprecision(2) << mtbbbData[i].yaw << "," << mtbbbData[i].pitch << "," << mtbbbData[i].dpitch << "," << mtbbbData[i].roll << "," << mtbbbData[i].accX << "," << mtbbbData[i].accY << "," << mtbbbData[i].accZ << "," << mtbbbData[i].daccZ << "," << mtbbbData[i].gpstime << "," << mtbbbData[i].lat << "," << mtbbbData[i].lon << "," << mtbbbData[i].speed << ",";
-            myfile << std::fixed << std::setprecision(2) << mtbbbData[i].alt << "," << mtbbbData[i].jhump << "," << mtbbbData[i].hangtime << "," << mtbbbData[i].whip << "," << mtbbbData[i].table << std::endl;
+            myfile << std::fixed << std::setprecision(2) << mtbbbData[i].alt << "," << mtbbbData[i].jump << "," << mtbbbData[i].hangtime << "," << mtbbbData[i].whip << "," << mtbbbData[i].table << std::endl;
           }
 
           // Close the file
