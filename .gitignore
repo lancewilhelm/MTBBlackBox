@@ -4,4 +4,4 @@ data/*
 *.txt
 .ipynb_checkpoints
 *.ipynb
-.vscode
+.vscode/
