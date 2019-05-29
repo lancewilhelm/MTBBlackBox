@@ -81,6 +81,9 @@ std::string maxHangtimeStr;     // String of maxHangtime
 std::string maxWhipStr;         // String of maxWhip
 std::string maxTableStr;        // String of maxTable
 
+// Flow setup
+float flow;   // Used to track flow. The lower the number the better.
+
 // -----------------MTBBB Data Structure-----------------------
 // This structure is the basis for data recording within MTBBBB
 // All variables should be self explanatory at this time
