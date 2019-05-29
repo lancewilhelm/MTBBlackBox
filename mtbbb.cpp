@@ -81,12 +81,17 @@ std::string maxHangtimeStr;     // String of maxHangtime
 std::string maxWhipStr;         // String of maxWhip
 std::string maxTableStr;        // String of maxTable
 
+// Flow setup
+float flow;          // Current flow
+float accYSum = 0;   // Totals the abs(accY). Used to calculate flow
+std::string flowStr; // String of flow
+
 // -----------------MTBBB Data Structure-----------------------
 // This structure is the basis for data recording within MTBBBB
 // All variables should be self explanatory at this time
 struct mtbbbDataStruct
 {
-  float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ, lat, lon, speed, alt, hangtime, whip, table;
+  float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ, lat, lon, speed, alt, hangtime, whip, table, flow;
   int jump, jumpMinMaxEvent; // jump events as ints not bools so as to view in graph easier
   std::string gpstime;
 };
@@ -95,8 +100,8 @@ struct mtbbbDataStruct
 std::vector<mtbbbDataStruct> mtbbbData;
 
 // Buffer size for derivatives
-int bufferSize = 5;                       // IMPORTANT, used for calculating derivatives
-int bufferCenterOffset = bufferSize / 2;  // Derived from bufferSize. n-bufferCenterOffset should be the center of the buffer
+int bufferSize = 5;                      // IMPORTANT, used for calculating derivatives
+int bufferCenterOffset = bufferSize / 2; // Derived from bufferSize. n-bufferCenterOffset should be the center of the buffer
 
 // ================================================================
 // ===                      FUNCTIONS                           ===
@@ -328,11 +333,21 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
     mtbbbData[n].accX = (static_cast<float>(aaWorld.x) / 4096);
     mtbbbData[n].accY = (static_cast<float>(aaWorld.y) / 4096);
     mtbbbData[n].accZ = (static_cast<float>(aaWorld.z) / 4096) - 1; // minus 1G for gravity
-    mtbbbData[n].dpitch = 0;                                        //temp
-    mtbbbData[n].daccZ = 0;                                         //temp
-    mtbbbData[n].jump = 0;                                          //temp
 
-    // Wait for full buffer to do some calcuations
+    // Flow calcuations. Wait approx 5 seconds (or ~500 loops) to let the accelerometer settle.
+    if (n >= 500)
+    {
+      accYSum += abs(mtbbbData[n].accY);
+      flow = accYSum / n;
+      mtbbbData[n].flow = flow;
+
+      // Write the flow String using a stream
+      std::ostringstream flowstream;
+      flowstream << std::fixed << std::setprecision(2) << flow;
+      flowStr = flowstream.str();
+    }
+
+    // Wait for full buffer to do certain calculations (dpitch, daccZ, Jump, Flow)
     if (mtbbbData.size() >= bufferSize)
     {
       // Calculate dpitch and daccZ
@@ -473,7 +488,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
       auto oled_time_str{osss.str()};
 
       std::string maxSpeedLine = "Max Sp: " + maxSpeedStr;
-      std::string jumpLine = "Jumps: " + std::to_string(numberOfJumps);
+      std::string jumpFlowLine = "Jumps: " + std::to_string(numberOfJumps) + "  Flow: " + flowStr;
       std::string hangtimeLine = "Max Hang: " + maxHangtimeStr;
       std::string whipTableLine = "Max W: " + maxWhipStr + ", T: " + maxTableStr;
 
@@ -482,7 +497,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
       {
         oledWriteString(0, 0, "GPS NL");
         oledWriteString(13, 0, oled_time_str);
-        oledWriteString(0, 4, jumpLine);
+        oledWriteString(0, 4, jumpFlowLine);
         oledWriteString(0, 5, hangtimeLine);
         oledWriteString(0, 6, whipTableLine);
       }
@@ -491,7 +506,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
         oledWriteString(0, 0, "GPS   ");
         oledWriteString(13, 0, oled_time_str);
         oledWriteString(0, 3, maxSpeedLine);
-        oledWriteString(0, 4, jumpLine);
+        oledWriteString(0, 4, jumpFlowLine);
         oledWriteString(0, 5, hangtimeLine);
         oledWriteString(0, 6, whipTableLine);
       }
@@ -553,7 +568,7 @@ int main()
         os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
         std::string filename = os.str();
         myfile.open(filename);
-        myfile << "t,yaw,pitch,dpitch,roll,accX,accY,accZ,daccZ,gpstime,lat,lon,speed,alt,jump,hangtime,whip,table\n";
+        myfile << "t,yaw,pitch,dpitch,roll,accX,accY,accZ,daccZ,gpstime,lat,lon,speed,alt,jump,hangtime,whip,table,flow\n";
 
         // Write the data to the file
         for (int i = 0; i < mtbbbData.size(); i++)
@@ -578,12 +593,14 @@ int main()
           // don't print blank jump data
           if (mtbbbData[i].hangtime != 0)
           {
-            myfile << mtbbbData[i].hangtime << "," << mtbbbData[i].whip << "," << mtbbbData[i].table << std::endl;
+            myfile << mtbbbData[i].hangtime << "," << mtbbbData[i].whip << "," << mtbbbData[i].table << ",";
           }
           else
           {
-            myfile << ",," << std::endl;
+            myfile << ",,,";
           }
+
+          myfile << std::fixed << std::setprecision(2) << mtbbbData[i].flow << std::endl;
         } // end for()
 
         // Close the file
