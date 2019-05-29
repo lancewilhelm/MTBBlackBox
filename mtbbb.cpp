@@ -477,7 +477,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
       std::string hangtimeLine = "Max Hang: " + maxHangtimeStr;
       std::string whipTableLine = "Max W: " + maxWhipStr + ", T: " + maxTableStr;
 
-      // display current GPS state
+      // Display current GPS state
       if (seconds == 0)
       {
         oledWriteString(0, 0, "GPS NL");
