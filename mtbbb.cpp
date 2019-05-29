@@ -91,7 +91,7 @@ std::string flowStr;  // String of flow
 // All variables should be self explanatory at this time
 struct mtbbbDataStruct
 {
-  float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ, lat, lon, speed, alt, hangtime, whip, table, flowTotal;
+  float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ, lat, lon, speed, alt, hangtime, whip, table, flow;
   int jump, jumpMinMaxEvent; // jump events as ints not bools so as to view in graph easier
   std::string gpstime;
 };
@@ -337,6 +337,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
     // Flow calcuations
     accYSum += abs(mtbbbData[n].accY);
     flow = accYSum / n;
+    mtbbbData[n].flow = flow;
 
     // Write the flow String using a stream
     std::ostringstream flowstream;
@@ -564,7 +565,7 @@ int main()
         os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
         std::string filename = os.str();
         myfile.open(filename);
-        myfile << "t,yaw,pitch,dpitch,roll,accX,accY,accZ,daccZ,gpstime,lat,lon,speed,alt,jump,hangtime,whip,table\n";
+        myfile << "t,yaw,pitch,dpitch,roll,accX,accY,accZ,daccZ,gpstime,lat,lon,speed,alt,jump,hangtime,whip,table,flow\n";
 
         // Write the data to the file
         for (int i = 0; i < mtbbbData.size(); i++)
@@ -589,12 +590,14 @@ int main()
           // don't print blank jump data
           if (mtbbbData[i].hangtime != 0)
           {
-            myfile << mtbbbData[i].hangtime << "," << mtbbbData[i].whip << "," << mtbbbData[i].table << std::endl;
+            myfile << mtbbbData[i].hangtime << "," << mtbbbData[i].whip << "," << mtbbbData[i].table << ",";
           }
           else
           {
-            myfile << ",," << std::endl;
+            myfile << ",,,";
           }
+
+          myfile << std::fixed << std::setprecision(2) << mtbbbData[i].flow << std::endl;
         } // end for()
 
         // Close the file
