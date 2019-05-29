@@ -82,9 +82,9 @@ std::string maxWhipStr;         // String of maxWhip
 std::string maxTableStr;        // String of maxTable
 
 // Flow setup
-float flow;           // Current flow
-float accYSum = 0;    // Totals the abs(accY). Used to calculate flow
-std::string flowStr;  // String of flow
+float flow;          // Current flow
+float accYSum = 0;   // Totals the abs(accY). Used to calculate flow
+std::string flowStr; // String of flow
 
 // -----------------MTBBB Data Structure-----------------------
 // This structure is the basis for data recording within MTBBBB
@@ -100,8 +100,8 @@ struct mtbbbDataStruct
 std::vector<mtbbbDataStruct> mtbbbData;
 
 // Buffer size for derivatives
-int bufferSize = 5;                       // IMPORTANT, used for calculating derivatives
-int bufferCenterOffset = bufferSize / 2;  // Derived from bufferSize. n-bufferCenterOffset should be the center of the buffer
+int bufferSize = 5;                      // IMPORTANT, used for calculating derivatives
+int bufferCenterOffset = bufferSize / 2; // Derived from bufferSize. n-bufferCenterOffset should be the center of the buffer
 
 // ================================================================
 // ===                      FUNCTIONS                           ===
@@ -334,15 +334,18 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
     mtbbbData[n].accY = (static_cast<float>(aaWorld.y) / 4096);
     mtbbbData[n].accZ = (static_cast<float>(aaWorld.z) / 4096) - 1; // minus 1G for gravity
 
-    // Flow calcuations
-    accYSum += abs(mtbbbData[n].accY);
-    flow = accYSum / n;
-    mtbbbData[n].flow = flow;
+    // Flow calcuations. Wait approx 5 seconds (or ~500 loops) to let the accelerometer settle.
+    if (n >= 500)
+    {
+      accYSum += abs(mtbbbData[n].accY);
+      flow = accYSum / n;
+      mtbbbData[n].flow = flow;
 
-    // Write the flow String using a stream
-    std::ostringstream flowstream;
-    flowstream << std::fixed << std::setprecision(2) << flow;
-    flowStr = flowstream.str();
+      // Write the flow String using a stream
+      std::ostringstream flowstream;
+      flowstream << std::fixed << std::setprecision(2) << flow;
+      flowStr = flowstream.str();
+    }
 
     // Wait for full buffer to do certain calculations (dpitch, daccZ, Jump, Flow)
     if (mtbbbData.size() >= bufferSize)
