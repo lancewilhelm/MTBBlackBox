@@ -77,6 +77,8 @@ int jumpEventMinLoc = 0;        // Index for the jump event landing
 float maxHangtime = 0;          // Max hangtime (s)
 float maxWhip = 0;              // Max whip (deg)
 float maxTable = 0;             // Max tabletop (deg)
+bool whipYawFliptoNeg = false;  // Used for whip calcs, in case the yaw rolls over 180
+bool whipYawFliptoPos = false;  // Used for whip calcs, in case the yaw rolls under -180
 std::string maxHangtimeStr;     // String of maxHangtime
 std::string maxWhipStr;         // String of maxWhip
 std::string maxTableStr;        // String of maxTable
@@ -370,14 +372,58 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
         float tableDeflection = 0;
 
         // iterate over the range to mark the jump and calculate whip and table
-        for (int i = jumpEventMaxLoc; i < jumpEventMinLoc; i++)
+        for (int i = jumpEventMaxLoc + 1; i < jumpEventMinLoc; i++)
         {
           mtbbbData[i].jump = 1;
 
-          // Calculate whip
-          if (abs(mtbbbData[i].yaw - initialYaw) > whipDeflection)
+          float tempYaw; // Used to calculate whip. Needed for yaw flip corrections
+
+          // Deal with yaw flips:
+          // This takes some time to wrap your head around how this works. I think it's right
+          // Check whether or not yaw has rolled over 180 to neg
+          if (mtbbbData[i - 1].yaw > 90 && mtbbbData[i].yaw < 0)
           {
-            whipDeflection = abs(mtbbbData[i].yaw - initialYaw);
+            if (whipYawFliptoPos == false)
+            {
+              whipYawFliptoNeg = true;
+            }
+            else
+            {
+              whipYawFliptoPos = false;
+            }
+          }
+
+          // Check whether or not yaw has rolled under -180 to pos
+          if (mtbbbData[i - 1].yaw < -90 && mtbbbData[i].yaw > 0)
+          {
+            if (whipYawFliptoNeg == false)
+            {
+              whipYawFliptoPos = true;
+            }
+            else
+            {
+              whipYawFliptoNeg = false;
+            }
+          }
+
+          // Define tempYaw
+          if (whipYawFliptoNeg)
+          {
+            tempYaw = 180 + (180 + mtbbbData[i].yaw);
+          }
+          else if (whipYawFliptoPos)
+          {
+            tempYaw = -180 - (180 - mtbbbData[i].yaw);
+          }
+          else
+          {
+            tempYaw = mtbbbData[i].yaw;
+          }
+
+          // Calculate whip
+          if (abs(tempYaw - initialYaw) > whipDeflection)
+          {
+            whipDeflection = abs(tempYaw - initialYaw);
           }
 
           // Calculate table
