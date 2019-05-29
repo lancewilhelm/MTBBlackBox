@@ -357,7 +357,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
       mtbbbData[n - bufferCenterOffset].daccZ = (mtbbbData[n].accZ - mtbbbData[n - (bufferSize - 1)].accZ) / (mtbbbData[n].t - mtbbbData[n - (bufferSize - 1)].t);
 
       // Terminal output for debugging
-      std::cout << std::fixed << std::setprecision(2) << "ypdr: " << mtbbbData[n-bufferCenterOffset].yaw << "," << mtbbbData[n-bufferCenterOffset].pitch << "," << mtbbbData[n-bufferCenterOffset].dpitch << "," << mtbbbData[n-bufferCenterOffset].roll << std::endl;
+      // std::cout << std::fixed << std::setprecision(2) << "ypdr: " << mtbbbData[n-bufferCenterOffset].yaw << "," << mtbbbData[n-bufferCenterOffset].pitch << "," << mtbbbData[n-bufferCenterOffset].dpitch << "," << mtbbbData[n-bufferCenterOffset].roll << std::endl;
 
       // Jump calculations
       if (possibleJumpEvent && mtbbbData[n].accZ >= 0 && jumpEventMaxLoc != 0)
