@@ -82,14 +82,16 @@ std::string maxWhipStr;         // String of maxWhip
 std::string maxTableStr;        // String of maxTable
 
 // Flow setup
-float flow;   // Used to track flow. The lower the number the better.
+float flow;           // Current flow
+float accYSum = 0;    // Totals the abs(accY). Used to calculate flow
+std::string flowStr;  // String of flow
 
 // -----------------MTBBB Data Structure-----------------------
 // This structure is the basis for data recording within MTBBBB
 // All variables should be self explanatory at this time
 struct mtbbbDataStruct
 {
-  float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ, lat, lon, speed, alt, hangtime, whip, table;
+  float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ, lat, lon, speed, alt, hangtime, whip, table, flowTotal;
   int jump, jumpMinMaxEvent; // jump events as ints not bools so as to view in graph easier
   std::string gpstime;
 };
@@ -331,11 +333,17 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
     mtbbbData[n].accX = (static_cast<float>(aaWorld.x) / 4096);
     mtbbbData[n].accY = (static_cast<float>(aaWorld.y) / 4096);
     mtbbbData[n].accZ = (static_cast<float>(aaWorld.z) / 4096) - 1; // minus 1G for gravity
-    mtbbbData[n].dpitch = 0;                                        //temp
-    mtbbbData[n].daccZ = 0;                                         //temp
-    mtbbbData[n].jump = 0;                                          //temp
 
-    // Wait for full buffer to do some calcuations
+    // Flow calcuations
+    accYSum += abs(mtbbbData[n].accY);
+    flow = accYSum / n;
+
+    // Write the flow String using a stream
+    std::ostringstream flowstream;
+    flowstream << std::fixed << std::setprecision(2) << flow;
+    flowStr = flowstream.str();
+
+    // Wait for full buffer to do certain calculations (dpitch, daccZ, Jump, Flow)
     if (mtbbbData.size() >= bufferSize)
     {
       // Calculate dpitch and daccZ
@@ -476,7 +484,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
       auto oled_time_str{osss.str()};
 
       std::string maxSpeedLine = "Max Sp: " + maxSpeedStr;
-      std::string jumpLine = "Jumps: " + std::to_string(numberOfJumps);
+      std::string jumpFlowLine = "Jumps: " + std::to_string(numberOfJumps) + " Flow: " + flowStr;
       std::string hangtimeLine = "Max Hang: " + maxHangtimeStr;
       std::string whipTableLine = "Max W: " + maxWhipStr + ", T: " + maxTableStr;
 
@@ -485,7 +493,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
       {
         oledWriteString(0, 0, "GPS NL");
         oledWriteString(13, 0, oled_time_str);
-        oledWriteString(0, 4, jumpLine);
+        oledWriteString(0, 4, jumpFlowLine);
         oledWriteString(0, 5, hangtimeLine);
         oledWriteString(0, 6, whipTableLine);
       }
@@ -494,7 +502,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
         oledWriteString(0, 0, "GPS   ");
         oledWriteString(13, 0, oled_time_str);
         oledWriteString(0, 3, maxSpeedLine);
-        oledWriteString(0, 4, jumpLine);
+        oledWriteString(0, 4, jumpFlowLine);
         oledWriteString(0, 5, hangtimeLine);
         oledWriteString(0, 6, whipTableLine);
       }
