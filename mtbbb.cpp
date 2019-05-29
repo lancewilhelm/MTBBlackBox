@@ -333,7 +333,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
     mtbbbData[n].accX = (static_cast<float>(aaWorld.x) / 4096);
     mtbbbData[n].accY = (static_cast<float>(aaWorld.y) / 4096);
     mtbbbData[n].accZ = (static_cast<float>(aaWorld.z) / 4096) - 1; // minus 1G for gravity
-.
+
     // Flow calcuations. Wait approx 5 seconds (or ~500 loops) to let the accelerometer settle.
     if (n >= 500)
     {
