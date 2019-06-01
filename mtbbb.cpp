@@ -340,7 +340,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
     if (n >= 500)
     {
       accYSum += abs(mtbbbData[n].accY);
-      flow = (accYSum / n) * 10;  //multiply by 10 to make the resulting number more sensitive
+      flow = (accYSum / n) * 10; //multiply by 10 to make the resulting number more sensitive
       mtbbbData[n].flow = flow;
 
       // Write the flow String using a stream
@@ -701,8 +701,14 @@ int main()
       }
 
       // If we have received a new GPS packet, update the time
-      if(newGPSData){
-        mtbbbData[n].gpstime = time_str;
+      if (newGPSData)
+      {
+        timestamp_t ts{gpsd_data->fix.time};
+
+        // convert GPSD's timestamp_t into time_t
+        time_t seconds{(time_t)ts};
+        seconds -= 25200; // 7 hour correction for time zone
+        auto tm = *std::localtime(&seconds);
 
         // Format the time for the OLED screen
         std::ostringstream osss;
@@ -713,7 +719,6 @@ int main()
 
         newGPSData = false; //reset the variable
       }
-      
 
       // Check for button press. Start program
       if (digitalRead(BUTTON) == HIGH)
