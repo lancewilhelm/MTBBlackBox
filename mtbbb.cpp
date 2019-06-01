@@ -433,6 +433,10 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
           }
         }
 
+        // Reset whip flip variables
+        whipYawFliptoNeg = false;
+        whipYawFliptoPos = false;
+
         // Record whip
         mtbbbData[jumpEventMinLoc].whip = whipDeflection;
         if (mtbbbData[jumpEventMinLoc].whip > maxWhip)
