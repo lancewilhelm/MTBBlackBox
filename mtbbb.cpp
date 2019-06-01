@@ -340,7 +340,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
     if (n >= 500)
     {
       accYSum += abs(mtbbbData[n].accY);
-      flow = accYSum / n;
+      flow = (accYSum / n) * 10;  //multiply by 10 to make the resulting number more sensitive
       mtbbbData[n].flow = flow;
 
       // Write the flow String using a stream
@@ -699,6 +699,7 @@ int main()
         maxWhip = 0;
         maxTable = 0;
         maxSpeed = 0;
+        flow = 0;
         maxHangtimeStr = "";
         maxWhipStr = "";
         maxTableStr = "";
