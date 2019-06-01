@@ -684,6 +684,10 @@ int main()
       // Get GPS goodies if setup did not fail and we are not waiting for a packet
       // This is necessary so that we don't have catchup during restart which causes
       // data resolution drop during the catchup period
+
+      // create a structure for the data
+      struct gps_data_t *gpsd_data;
+
       if (!gpsfail && gps_rec.waiting(100))
       {
         std::cout << "GPS READY" << std::endl;
