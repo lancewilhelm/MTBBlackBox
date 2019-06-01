@@ -510,6 +510,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
     oss << std::put_time(&tm, "%d-%m-%Y %H:%M:%S");
     auto time_str{oss.str()};
 
+    // If we have received new GPS data, update the screen (equates to 1Hz screen updates)
     if (newGPSData)
     {
       mtbbbData[n].gpstime = time_str;
@@ -517,20 +518,15 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
       mtbbbData[n].lon = gpsd_data->fix.longitude;
       mtbbbData[n].speed = gpsd_data->fix.speed * MPS_TO_MPH;
       mtbbbData[n].alt = gpsd_data->fix.altitude * METERS_TO_FEET;
-    }
 
-    // check for new max speed
-    if (mtbbbData[n].speed > maxSpeed)
-    {
-      maxSpeed = mtbbbData[n].speed;
-      std::ostringstream stream;
-      stream << std::fixed << std::setprecision(2) << maxSpeed;
-      maxSpeedStr = stream.str();
-    }
-
-    // If we have received new GPS data, update the screen (equates to 1Hz screen updates)
-    if (newGPSData)
-    { //fix this
+      // check for new max speed
+      if (mtbbbData[n].speed > maxSpeed)
+      {
+        maxSpeed = mtbbbData[n].speed;
+        std::ostringstream stream;
+        stream << std::fixed << std::setprecision(2) << maxSpeed;
+        maxSpeedStr = stream.str();
+      }
 
       // Format the time for the OLED screen
       std::ostringstream osss;
@@ -684,6 +680,41 @@ int main()
     }
     else
     {
+
+      // Get GPS goodies if setup did not fail and we are not waiting for a packet
+      // This is necessary so that we don't have catchup during restart which causes
+      // data resolution drop during the catchup period
+      if (!gpsfail && gps_rec.waiting(100))
+      {
+        std::cout << "GPS READY" << std::endl;
+        newGPSData = true;
+        // Read the GPS data and error check at the same time
+        if ((gpsd_data = gps_rec.read()) == NULL)
+        {
+          std::cerr << "GPSD READ ERROR.\n";
+          gpsfail = true;
+        }
+        else if ((gpsd_data->fix.mode < MODE_2D))
+        {
+          std::cout << "RETURNING DUE TO FIX MODE ERR" << std::endl;
+        }
+      }
+
+      // If we have received a new GPS packet, update the time
+      if(newGPSData){
+        mtbbbData[n].gpstime = time_str;
+
+        // Format the time for the OLED screen
+        std::ostringstream osss;
+        osss << std::put_time(&tm, "%H:%M:%S");
+        auto oled_time_str{osss.str()};
+
+        oledWriteString(13, 0, oled_time_str);
+
+        newGPSData = false; //reset the variable
+      }
+      
+
       // Check for button press. Start program
       if (digitalRead(BUTTON) == HIGH)
       {
