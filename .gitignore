@@ -1,4 +1,6 @@
 *.pyc
-data/*
+**/data
 *.html
-*.txt
+.ipynb_checkpoints
+*.ipynb
+.vscode
