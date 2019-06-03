@@ -739,7 +739,7 @@ int main()
         maxWhip = 0;
         maxTable = 0;
         maxSpeed = 0;
-        flow = 0;
+        accYSum = 0;
         maxHangtimeStr = "";
         maxWhipStr = "";
         maxTableStr = "";
