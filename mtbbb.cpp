@@ -671,13 +671,13 @@ int main()
         os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
         std::string filename = os.str();
         myfile.open(filename);
-        myfile << "t,yaw,pitch,dpitch,roll,accX,accY,accZ,daccZ,gpstime,lat,lon,speed,alt,jump,hangtime,whip,table,flow\n";
+        myfile << "t,yaw,pitch,dpitch,roll,accX,accY,accZ,smoothaccZ,daccZ,gpstime,lat,lon,speed,alt,jump,hangtime,whip,table,flow\n";
 
         // Write the data to the file
         for (int i = 0; i < mtbbbData.size(); i++)
         {
           myfile << std::fixed << std::setprecision(6) << mtbbbData[i].t << ",";
-          myfile << std::fixed << std::setprecision(2) << mtbbbData[i].yaw << "," << mtbbbData[i].pitch << "," << mtbbbData[i].dpitch << "," << mtbbbData[i].roll << "," << mtbbbData[i].accX << "," << mtbbbData[i].accY << "," << mtbbbData[i].accZ << "," << mtbbbData[i].daccZ << ",";
+          myfile << std::fixed << std::setprecision(2) << mtbbbData[i].yaw << "," << mtbbbData[i].pitch << "," << mtbbbData[i].dpitch << "," << mtbbbData[i].roll << "," << mtbbbData[i].accX << "," << mtbbbData[i].accY << "," << mtbbbData[i].accZ << "," << mtbbbData[i].smoothaccZ << "," << mtbbbData[i].daccZ << ",";
 
           // don't print GPS blanks
           if (mtbbbData[i].lat != 0)
