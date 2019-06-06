@@ -104,8 +104,13 @@ struct mtbbbDataStruct
 std::vector<mtbbbDataStruct> mtbbbData;
 
 // Buffer size for derivatives
-int bufferSize = 5;                      // IMPORTANT, used for calculating derivatives and smoothing
-int bufferCenterOffset = bufferSize / 2; // Derived from bufferSize. n-bufferCenterOffset should be the center of the buffer
+int dbufferSize = 5;                       // IMPORTANT, used for calculating derivatives
+int dbufferCenterOffset = dbufferSize / 2; // Derived from dbufferSize. n-dbufferCenterOffset should be the center of the buffer
+
+// Buffer size for smoothaccZ
+int smoothbufferSize = 20;                           // IMPORTANT, used for calculating smoothing
+int smoothbufferCenterOffset = smoothbufferSize / 2; // Derived from smoothbufferSize. n-smoothbufferCenterOffset should be the center of the buffer
+float smoothaccZbufferSum = 0;                       // Used for calculating smoothaccZ
 
 // ================================================================
 // ===                      FUNCTIONS                           ===
@@ -338,6 +343,17 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
     mtbbbData[n].accY = (static_cast<float>(aaWorld.y) / 4096);
     mtbbbData[n].accZ = (static_cast<float>(aaWorld.z) / 4096) - 1; // minus 1G for gravity
 
+    // Modify the smoothaccZbuffersum for smoothaccZ calcs
+    if (n < smoothbufferSize)
+    {
+      smoothaccZbufferSum += mtbbbData[n].accZ;
+    }
+    else
+    {
+      smoothaccZbufferSum -= mtbbbData[n - smoothbufferSize].accZ;
+      smoothaccZbufferSum += mtbbbData[n].accZ;
+    }
+
     // Flow calcuations. Wait approx 5 seconds (or ~500 loops) to let the accelerometer settle.
     if (n >= 500)
     {
@@ -351,15 +367,18 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
       flowStr = flowstream.str();
     }
 
-    // Wait for full buffer to do certain calculations (dpitch, daccZ, Jump, Flow)
-    if (mtbbbData.size() >= bufferSize)
+    // Wait for full buffer to do certain calculations (dpitch, smoothaccZ, daccZ, Jump, Flow)
+    if (mtbbbData.size() >= smoothbufferSize)
     {
       // Calculate dpitch and daccZ
-      mtbbbData[n - bufferCenterOffset].dpitch = (mtbbbData[n].pitch - mtbbbData[n - (bufferSize - 1)].pitch) / (mtbbbData[n].t - mtbbbData[n - (bufferSize - 1)].t);
-      mtbbbData[n - bufferCenterOffset].daccZ = (mtbbbData[n].accZ - mtbbbData[n - (bufferSize - 1)].accZ) / (mtbbbData[n].t - mtbbbData[n - (bufferSize - 1)].t);
+      mtbbbData[n - dbufferCenterOffset].dpitch = (mtbbbData[n].pitch - mtbbbData[n - (dbufferSize - 1)].pitch) / (mtbbbData[n].t - mtbbbData[n - (dbufferSize - 1)].t);
+      mtbbbData[n - dbufferCenterOffset].daccZ = (mtbbbData[n].accZ - mtbbbData[n - (dbufferSize - 1)].accZ) / (mtbbbData[n].t - mtbbbData[n - (dbufferSize - 1)].t);
+
+      // Calculate smoothaccZ
+      mtbbbData[n - smoothbufferCenterOffset].smoothaccZ = smoothaccZbufferSum / smoothbufferSize;
 
       // Terminal output for debugging
-      // std::cout << std::fixed << std::setprecision(2) << "ypdr: " << mtbbbData[n-bufferCenterOffset].yaw << "," << mtbbbData[n-bufferCenterOffset].pitch << "," << mtbbbData[n-bufferCenterOffset].dpitch << "," << mtbbbData[n-bufferCenterOffset].roll << std::endl;
+      // std::cout << std::fixed << std::setprecision(2) << "ypdr: " << mtbbbData[n-dbufferCenterOffset].yaw << "," << mtbbbData[n-dbufferCenterOffset].pitch << "," << mtbbbData[n-dbufferCenterOffset].dpitch << "," << mtbbbData[n-dbufferCenterOffset].roll << std::endl;
 
       //--------------Jump calculations--------------------
 
@@ -509,25 +528,25 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
           jumpEventMinLoc = 0;
         }
       }
-      else if (mtbbbData[n - (bufferCenterOffset + 1)].daccZ > 0 && mtbbbData[n - bufferCenterOffset].daccZ <= 0 && mtbbbData[n - bufferCenterOffset].accZ > jumpMaxThreshold)
+      else if (mtbbbData[n - (dbufferCenterOffset + 1)].daccZ > 0 && mtbbbData[n - dbufferCenterOffset].daccZ <= 0 && mtbbbData[n - dbufferCenterOffset].accZ > jumpMaxThreshold)
       {
-        mtbbbData[n - bufferCenterOffset].jumpMinMaxEvent = 1; // jump maximum (takeoff). Used for debugging
+        mtbbbData[n - dbufferCenterOffset].jumpMinMaxEvent = 1; // jump maximum (takeoff). Used for debugging
 
-        jumpEventMaxLoc = n - bufferCenterOffset;
+        jumpEventMaxLoc = n - dbufferCenterOffset;
       }
-      else if (mtbbbData[n - (bufferCenterOffset + 1)].daccZ < 0 && mtbbbData[n - bufferCenterOffset].daccZ >= 0 && mtbbbData[n - bufferCenterOffset].accZ < jumpMinThreshold)
+      else if (mtbbbData[n - (dbufferCenterOffset + 1)].daccZ < 0 && mtbbbData[n - dbufferCenterOffset].daccZ >= 0 && mtbbbData[n - dbufferCenterOffset].accZ < jumpMinThreshold)
       {
-        mtbbbData[n - bufferCenterOffset].jumpMinMaxEvent = -1; // jump minimum (landing). Used for debugging
+        mtbbbData[n - dbufferCenterOffset].jumpMinMaxEvent = -1; // jump minimum (landing). Used for debugging
 
         // Flag for a possible finish of a jump
         possibleJumpEvent = true;
-        jumpEventMinLoc = n - bufferCenterOffset;
+        jumpEventMinLoc = n - dbufferCenterOffset;
       }
       else
       {
-        mtbbbData[n - bufferCenterOffset].jumpMinMaxEvent = 0; // no jump event
-      }                                                        // end of jump if statement
-    }                                                          // end of waiting for full buffer
+        mtbbbData[n - dbufferCenterOffset].jumpMinMaxEvent = 0; // no jump event
+      }                                                         // end of jump if statement
+    }                                                           // end of waiting for full buffer
 
     // GPS data acquisition
     timestamp_t ts{gpsd_data->fix.time};
@@ -638,7 +657,7 @@ int main()
 
         // Check to make sure data folder exists, if not make it
         std::string dataPath = "/home/pi/mtbblackbox/data";
-        if(!fileExists(dataPath))
+        if (!fileExists(dataPath))
         {
           system("mkdir /home/pi/mtbblackbox/data");
         }
