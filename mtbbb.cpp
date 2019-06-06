@@ -640,7 +640,7 @@ int main()
         std::string dataPath = "/home/pi/mtbblackbox/data";
         if(!fileExists(dataPath))
         {
-          mkdir("/home/pi/mtbblackbox/data");
+          system("mkdir /home/pi/mtbblackbox/data");
         }
 
         // Initialize file for recording
