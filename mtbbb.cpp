@@ -498,6 +498,13 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
           possibleJumpEvent = false;
           jumpEventMaxLoc = 0;
           jumpEventMinLoc = 0;
+        } else {
+          // Possible drop event
+          
+          // Reset values
+          possibleJumpEvent = false;
+          jumpEventMaxLoc = 0;
+          jumpEventMinLoc = 0;
         }
       }
       else if (mtbbbData[n - (bufferCenterOffset + 1)].daccZ > 0 && mtbbbData[n - bufferCenterOffset].daccZ <= 0 && mtbbbData[n - bufferCenterOffset].accZ > jumpMaxThreshold)
