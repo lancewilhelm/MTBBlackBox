@@ -498,9 +498,11 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
           possibleJumpEvent = false;
           jumpEventMaxLoc = 0;
           jumpEventMinLoc = 0;
-        } else {
+        }
+        else
+        {
           // Possible drop event
-          
+
           // Reset values
           possibleJumpEvent = false;
           jumpEventMaxLoc = 0;
@@ -633,6 +635,13 @@ int main()
       if (digitalRead(BUTTON) == HIGH)
       {
         oledWriteString(2, 7, "Ending MTBBB....");
+
+        // Check to make sure data folder exists, if not make it
+        std::string dataPath = "/home/pi/mtbblackbox/data";
+        if(!fileExists(dataPath))
+        {
+          mkdir("/home/pi/mtbblackbox/data");
+        }
 
         // Initialize file for recording
         std::ofstream myfile;
