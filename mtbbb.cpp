@@ -383,7 +383,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
       //--------------Jump calculations--------------------
 
       // If we are in a possible event (-accZ of < -2) and then the accZ has returned back, find the jump
-      if (possibleJumpEvent && mtbbbData[n].accZ >= 0 && jumpEventMaxLoc != 0)
+      if (possibleJumpEvent && mtbbbData[n].smoothaccZ >= 0 && jumpEventMaxLoc != 0)
       {
 
         jumpPitchThresholdExceeded = false; // reset this value to begin search
@@ -528,13 +528,13 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
           jumpEventMinLoc = 0;
         }
       }
-      else if (mtbbbData[n - (dbufferCenterOffset + 1)].daccZ > 0 && mtbbbData[n - dbufferCenterOffset].daccZ <= 0 && mtbbbData[n - dbufferCenterOffset].accZ > jumpMaxThreshold)
+      else if (mtbbbData[n - (dbufferCenterOffset + 1)].daccZ > 0 && mtbbbData[n - dbufferCenterOffset].daccZ <= 0 && mtbbbData[n - dbufferCenterOffset].smoothaccZ > jumpMaxThreshold)
       {
         mtbbbData[n - dbufferCenterOffset].jumpMinMaxEvent = 1; // jump maximum (takeoff). Used for debugging
 
         jumpEventMaxLoc = n - dbufferCenterOffset;
       }
-      else if (mtbbbData[n - (dbufferCenterOffset + 1)].daccZ < 0 && mtbbbData[n - dbufferCenterOffset].daccZ >= 0 && mtbbbData[n - dbufferCenterOffset].accZ < jumpMinThreshold)
+      else if (mtbbbData[n - (dbufferCenterOffset + 1)].daccZ < 0 && mtbbbData[n - dbufferCenterOffset].daccZ >= 0 && mtbbbData[n - dbufferCenterOffset].smoothaccZ < jumpMinThreshold)
       {
         mtbbbData[n - dbufferCenterOffset].jumpMinMaxEvent = -1; // jump minimum (landing). Used for debugging
 
