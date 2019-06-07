@@ -103,6 +103,16 @@ struct mtbbbDataStruct
 // Initialize the data structure
 std::vector<mtbbbDataStruct> mtbbbData;
 
+//----------------Jump Logging Structure----------------------
+struct jumpDataStruct
+{
+  float hangtime, whip, table;
+}
+
+// Initialize the jump data structure
+std::vector<jumpDataStruct>
+    jumpData;
+
 // Buffer size for derivatives
 int dbufferSize = 5;                       // IMPORTANT, used for calculating derivatives
 int dbufferCenterOffset = dbufferSize / 2; // Derived from dbufferSize. n-dbufferCenterOffset should be the center of the buffer
@@ -406,6 +416,9 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
           std::cout << "JUMP" << std::endl;
           numberOfJumps += 1;
 
+          // Create a new vector entry for jumpData
+          jumpData.push_back(mtbbbDataStruct());
+
           float initialYaw = mtbbbData[jumpEventMaxLoc].yaw;
           float initialRoll = mtbbbData[jumpEventMaxLoc].roll;
           float whipDeflection = 0;
@@ -513,6 +526,11 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
           stream3 << std::fixed << std::setprecision(2) << maxHangtime;
           maxHangtimeStr = stream3.str();
 
+          // Write data to the jumpData vector
+          jumpData.back().hangtime = mtbbbData[jumpEventMinLoc].hangtime;
+          jumpData.back().table = tableDeflection;
+          jumpData.back().whip = whipDeflection;
+
           // Reset values
           possibleJumpEvent = false;
           jumpEventMaxLoc = 0;
@@ -545,8 +563,8 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
       else
       {
         mtbbbData[n - smoothbufferCenterOffset].jumpMinMaxEvent = 0; // no jump event
-      } // end of jump if statement
-    } // end of waiting for full buffer
+      }                                                              // end of jump if statement
+    }                                                                // end of waiting for full buffer
 
     // GPS data acquisition
     timestamp_t ts{gpsd_data->fix.time};
@@ -593,24 +611,28 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
       {
         oledWriteString(0, 0, "GPS NL");
         oledWriteString(13, 0, oled_time_str);
-        oledWriteString(0, 4, jumpFlowLine);
-        oledWriteString(0, 5, hangtimeLine);
-        oledWriteString(0, 6, whipTableLine);
+        // oledWriteString(0, 4, jumpFlowLine);
+        // oledWriteString(0, 5, hangtimeLine);
+        // oledWriteString(0, 6, whipTableLine);
       }
       else
       {
         oledWriteString(0, 0, "GPS   ");
         oledWriteString(13, 0, oled_time_str);
-        oledWriteString(0, 3, maxSpeedLine);
-        oledWriteString(0, 4, jumpFlowLine);
-        oledWriteString(0, 5, hangtimeLine);
-        oledWriteString(0, 6, whipTableLine);
+        // oledWriteString(0, 3, maxSpeedLine);
+        // oledWriteString(0, 4, jumpFlowLine);
+        // oledWriteString(0, 5, hangtimeLine);
+        // oledWriteString(0, 6, whipTableLine);
       }
 
       newGPSData = false;
     } // end if (newGPSData)
   }   // end if(fifocount)
 } // end loop()
+
+//-----------------------------------------
+//----------------MAIN---------------------
+//-----------------------------------------
 
 int main()
 {
@@ -639,6 +661,12 @@ int main()
 
   // Clear display before starting
   oledFill(0x00);
+
+  // Draw center divider line
+  for(int i = 16; i < 64; i++)
+  {
+    oledSetPixel(64,i,1);
+  }
 
   //-----------------------------------------------------------
   //                         Main Loop
