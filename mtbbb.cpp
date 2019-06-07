@@ -528,25 +528,25 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
           jumpEventMinLoc = 0;
         }
       }
-      else if (mtbbbData[n - (dbufferCenterOffset + 1)].daccZ > 0 && mtbbbData[n - dbufferCenterOffset].daccZ <= 0 && mtbbbData[n - dbufferCenterOffset].smoothaccZ > jumpMaxThreshold)
+      else if (mtbbbData[n - (smoothbufferCenterOffset + 1)].daccZ > 0 && mtbbbData[n - smoothbufferCenterOffset].daccZ <= 0 && mtbbbData[n - smoothbufferCenterOffset].smoothaccZ > jumpMaxThreshold)
       {
-        mtbbbData[n - dbufferCenterOffset].jumpMinMaxEvent = 1; // jump maximum (takeoff). Used for debugging
+        mtbbbData[n - smoothbufferCenterOffset].jumpMinMaxEvent = 1; // jump maximum (takeoff). Used for debugging
 
-        jumpEventMaxLoc = n - dbufferCenterOffset;
+        jumpEventMaxLoc = n - smoothbufferCenterOffset;
       }
-      else if (mtbbbData[n - (dbufferCenterOffset + 1)].daccZ < 0 && mtbbbData[n - dbufferCenterOffset].daccZ >= 0 && mtbbbData[n - dbufferCenterOffset].smoothaccZ < jumpMinThreshold)
+      else if (mtbbbData[n - (smoothbufferCenterOffset + 1)].daccZ < 0 && mtbbbData[n - smoothbufferCenterOffset].daccZ >= 0 && mtbbbData[n - smoothbufferCenterOffset].smoothaccZ < jumpMinThreshold)
       {
-        mtbbbData[n - dbufferCenterOffset].jumpMinMaxEvent = -1; // jump minimum (landing). Used for debugging
+        mtbbbData[n - smoothbufferCenterOffset].jumpMinMaxEvent = -1; // jump minimum (landing). Used for debugging
 
         // Flag for a possible finish of a jump
         possibleJumpEvent = true;
-        jumpEventMinLoc = n - dbufferCenterOffset;
+        jumpEventMinLoc = n - smoothbufferCenterOffset;
       }
       else
       {
-        mtbbbData[n - dbufferCenterOffset].jumpMinMaxEvent = 0; // no jump event
-      }                                                         // end of jump if statement
-    }                                                           // end of waiting for full buffer
+        mtbbbData[n - smoothbufferCenterOffset].jumpMinMaxEvent = 0; // no jump event
+      } // end of jump if statement
+    } // end of waiting for full buffer
 
     // GPS data acquisition
     timestamp_t ts{gpsd_data->fix.time};
