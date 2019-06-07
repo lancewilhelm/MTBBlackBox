@@ -416,7 +416,7 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
           numberOfJumps += 1;
 
           // Create a new vector entry for jumpData
-          jumpData.push_back(mtbbbDataStruct());
+          jumpData.push_back(jumpDataStruct());
 
           float initialYaw = mtbbbData[jumpEventMaxLoc].yaw;
           float initialRoll = mtbbbData[jumpEventMaxLoc].roll;
