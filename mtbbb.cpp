@@ -107,7 +107,7 @@ std::vector<mtbbbDataStruct> mtbbbData;
 struct jumpDataStruct
 {
   float hangtime, whip, table;
-}
+};
 
 // Initialize the jump data structure
 std::vector<jumpDataStruct> jumpData;
