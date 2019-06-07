@@ -110,8 +110,7 @@ struct jumpDataStruct
 }
 
 // Initialize the jump data structure
-std::vector<jumpDataStruct>
-    jumpData;
+std::vector<jumpDataStruct> jumpData;
 
 // Buffer size for derivatives
 int dbufferSize = 5;                       // IMPORTANT, used for calculating derivatives
