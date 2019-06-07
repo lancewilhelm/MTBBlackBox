@@ -82,7 +82,7 @@ bool whipYawFliptoPos = false;   // Used for whip calcs, in case the yaw rolls u
 std::string maxHangtimeStr;      // String of maxHangtime
 std::string maxWhipStr;          // String of maxWhip
 std::string maxTableStr;         // String of maxTable
-float jumpPitchThreshold = 18;   // Pitch angle that the bike must exceed during a potential jump for it to be considered a jump (deg)
+float jumpPitchThreshold = 15;   // Pitch angle that the bike must exceed during a potential jump for it to be considered a jump (deg)
 bool jumpPitchThresholdExceeded; // Did the jump exceed the pitch threshold set by jumpPitchThreshold
 
 // Flow setup
