@@ -68,20 +68,22 @@ float pitchOffset = 27.21; // Used for device setup on bike. Corrects for setup 
 float rollOffset = 0;      // Used for device setup on bike. Corrects for setup angles (deg)
 
 // Jump setup
-int numberOfJumps = 0;          // Count of number of jumps during run
-float jumpMinThreshold = -2;    // Min accZ threshold used to trigger a landing event
-float jumpMaxThreshold = 1;     // Max accZ threshold used to trigger a takeoff event
-bool possibleJumpEvent = false; // A possible jump event occured or not
-int jumpEventMaxLoc = 0;        // Index for the jump event takeoff
-int jumpEventMinLoc = 0;        // Index for the jump event landing
-float maxHangtime = 0;          // Max hangtime (s)
-float maxWhip = 0;              // Max whip (deg)
-float maxTable = 0;             // Max tabletop (deg)
-bool whipYawFliptoNeg = false;  // Used for whip calcs, in case the yaw rolls over 180
-bool whipYawFliptoPos = false;  // Used for whip calcs, in case the yaw rolls under -180
-std::string maxHangtimeStr;     // String of maxHangtime
-std::string maxWhipStr;         // String of maxWhip
-std::string maxTableStr;        // String of maxTable
+int numberOfJumps = 0;           // Count of number of jumps during run
+float jumpMinThreshold = -2;     // Min accZ threshold used to trigger a landing event
+float jumpMaxThreshold = 1;      // Max accZ threshold used to trigger a takeoff event
+bool possibleJumpEvent = false;  // A possible jump event occured or not
+int jumpEventMaxLoc = 0;         // Index for the jump event takeoff
+int jumpEventMinLoc = 0;         // Index for the jump event landing
+float maxHangtime = 0;           // Max hangtime (s)
+float maxWhip = 0;               // Max whip (deg)
+float maxTable = 0;              // Max tabletop (deg)
+bool whipYawFliptoNeg = false;   // Used for whip calcs, in case the yaw rolls over 180
+bool whipYawFliptoPos = false;   // Used for whip calcs, in case the yaw rolls under -180
+std::string maxHangtimeStr;      // String of maxHangtime
+std::string maxWhipStr;          // String of maxWhip
+std::string maxTableStr;         // String of maxTable
+float jumpPitchThreshold = 15;   // Pitch angle that the bike must exceed during a potential jump for it to be considered a jump (deg)
+bool jumpPitchThresholdExceeded; // Did the jump exceed the pitch threshold set by jumpPitchThreshold
 
 // Flow setup
 float flow;          // Current flow
@@ -93,7 +95,7 @@ std::string flowStr; // String of flow
 // All variables should be self explanatory at this time
 struct mtbbbDataStruct
 {
-  float t, yaw, pitch, dpitch, roll, accX, accY, accZ, daccZ, lat, lon, speed, alt, hangtime, whip, table, flow;
+  float t, yaw, pitch, dpitch, roll, accX, accY, accZ, smoothaccZ, daccZ, lat, lon, speed, alt, hangtime, whip, table, flow;
   int jump, jumpMinMaxEvent; // jump events as ints not bools so as to view in graph easier
   std::string gpstime;
 };
@@ -102,8 +104,13 @@ struct mtbbbDataStruct
 std::vector<mtbbbDataStruct> mtbbbData;
 
 // Buffer size for derivatives
-int bufferSize = 5;                      // IMPORTANT, used for calculating derivatives
-int bufferCenterOffset = bufferSize / 2; // Derived from bufferSize. n-bufferCenterOffset should be the center of the buffer
+int dbufferSize = 5;                       // IMPORTANT, used for calculating derivatives
+int dbufferCenterOffset = dbufferSize / 2; // Derived from dbufferSize. n-dbufferCenterOffset should be the center of the buffer
+
+// Buffer size for smoothaccZ
+int smoothbufferSize = 20;                           // IMPORTANT, used for calculating smoothing
+int smoothbufferCenterOffset = smoothbufferSize / 2; // Derived from smoothbufferSize. n-smoothbufferCenterOffset should be the center of the buffer
+float smoothaccZbufferSum = 0;                       // Used for calculating smoothaccZ
 
 // ================================================================
 // ===                      FUNCTIONS                           ===
@@ -336,6 +343,17 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
     mtbbbData[n].accY = (static_cast<float>(aaWorld.y) / 4096);
     mtbbbData[n].accZ = (static_cast<float>(aaWorld.z) / 4096) - 1; // minus 1G for gravity
 
+    // Modify the smoothaccZbuffersum for smoothaccZ calcs
+    if (n < smoothbufferSize)
+    {
+      smoothaccZbufferSum += mtbbbData[n].accZ;
+    }
+    else
+    {
+      smoothaccZbufferSum -= mtbbbData[n - smoothbufferSize].accZ;
+      smoothaccZbufferSum += mtbbbData[n].accZ;
+    }
+
     // Flow calcuations. Wait approx 5 seconds (or ~500 loops) to let the accelerometer settle.
     if (n >= 500)
     {
@@ -349,154 +367,186 @@ void loop(std::chrono::high_resolution_clock::time_point &t0, std::chrono::high_
       flowStr = flowstream.str();
     }
 
-    // Wait for full buffer to do certain calculations (dpitch, daccZ, Jump, Flow)
-    if (mtbbbData.size() >= bufferSize)
+    // Wait for full buffer to do certain calculations (dpitch, smoothaccZ, daccZ, Jump, Flow)
+    if (mtbbbData.size() >= smoothbufferSize)
     {
       // Calculate dpitch and daccZ
-      mtbbbData[n - bufferCenterOffset].dpitch = (mtbbbData[n].pitch - mtbbbData[n - (bufferSize - 1)].pitch) / (mtbbbData[n].t - mtbbbData[n - (bufferSize - 1)].t);
-      mtbbbData[n - bufferCenterOffset].daccZ = (mtbbbData[n].accZ - mtbbbData[n - (bufferSize - 1)].accZ) / (mtbbbData[n].t - mtbbbData[n - (bufferSize - 1)].t);
+      mtbbbData[n - dbufferCenterOffset].dpitch = (mtbbbData[n].pitch - mtbbbData[n - (dbufferSize - 1)].pitch) / (mtbbbData[n].t - mtbbbData[n - (dbufferSize - 1)].t);
+      mtbbbData[n - dbufferCenterOffset].daccZ = (mtbbbData[n].accZ - mtbbbData[n - (dbufferSize - 1)].accZ) / (mtbbbData[n].t - mtbbbData[n - (dbufferSize - 1)].t);
+
+      // Calculate smoothaccZ
+      mtbbbData[n - smoothbufferCenterOffset].smoothaccZ = smoothaccZbufferSum / smoothbufferSize;
 
       // Terminal output for debugging
-      // std::cout << std::fixed << std::setprecision(2) << "ypdr: " << mtbbbData[n-bufferCenterOffset].yaw << "," << mtbbbData[n-bufferCenterOffset].pitch << "," << mtbbbData[n-bufferCenterOffset].dpitch << "," << mtbbbData[n-bufferCenterOffset].roll << std::endl;
+      // std::cout << std::fixed << std::setprecision(2) << "ypdr: " << mtbbbData[n-dbufferCenterOffset].yaw << "," << mtbbbData[n-dbufferCenterOffset].pitch << "," << mtbbbData[n-dbufferCenterOffset].dpitch << "," << mtbbbData[n-dbufferCenterOffset].roll << std::endl;
 
-      // Jump calculations
-      if (possibleJumpEvent && mtbbbData[n].accZ >= 0 && jumpEventMaxLoc != 0)
+      //--------------Jump calculations--------------------
+
+      // If we are in a possible event (-accZ of < -2) and then the accZ has returned back, find the jump
+      if (possibleJumpEvent && mtbbbData[n].smoothaccZ >= 0 && jumpEventMaxLoc != 0)
       {
-        // We have detected a full jump. Does not address drops yet, although drops might trigger this
-        std::cout << "JUMP" << std::endl;
-        numberOfJumps += 1;
 
-        float initialYaw = mtbbbData[jumpEventMaxLoc].yaw;
-        float initialRoll = mtbbbData[jumpEventMaxLoc].roll;
-        float whipDeflection = 0;
-        float tableDeflection = 0;
+        jumpPitchThresholdExceeded = false; // reset this value to begin search
 
-        // iterate over the range to mark the jump and calculate whip and table
-        for (int i = jumpEventMaxLoc + 1; i < jumpEventMinLoc; i++)
+        // First, analyze the pitch to see if we have indeed "jumped"
+        for (int i = jumpEventMaxLoc; i < jumpEventMinLoc; i++)
         {
-          mtbbbData[i].jump = 1;
-
-          float tempYaw; // Used to calculate whip. Needed for yaw flip corrections
-
-          // Deal with yaw flips:
-          // This takes some time to wrap your head around how this works. I think it's right
-          // Check whether or not yaw has rolled over 180 to neg
-          if (mtbbbData[i - 1].yaw > 90 && mtbbbData[i].yaw < 0)
+          if (mtbbbData[i].pitch >= jumpPitchThreshold)
           {
-            if (whipYawFliptoPos == false)
+            jumpPitchThresholdExceeded = true;
+            break;
+          }
+        }
+
+        // If we have indeed found a jump event with the correct pitch threshold exceed
+        // do the jump calculations
+        if (jumpPitchThresholdExceeded)
+        {
+          // We have detected a full jump. Does not address drops yet, although drops might trigger this
+          std::cout << "JUMP" << std::endl;
+          numberOfJumps += 1;
+
+          float initialYaw = mtbbbData[jumpEventMaxLoc].yaw;
+          float initialRoll = mtbbbData[jumpEventMaxLoc].roll;
+          float whipDeflection = 0;
+          float tableDeflection = 0;
+
+          // iterate over the range to mark the jump, as well as calculate max whip and table
+          for (int i = jumpEventMaxLoc + 1; i < jumpEventMinLoc; i++)
+          {
+            mtbbbData[i].jump = 1;
+
+            float tempYaw; // Used to calculate whip. Needed for yaw flip corrections
+
+            // Deal with yaw flips:
+            // This takes some time to wrap your head around how this works. I think it's right
+            // Check whether or not yaw has rolled over 180 to neg
+            if (mtbbbData[i - 1].yaw > 90 && mtbbbData[i].yaw < 0)
             {
-              whipYawFliptoNeg = true;
+              if (whipYawFliptoPos == false)
+              {
+                whipYawFliptoNeg = true;
+              }
+              else
+              {
+                whipYawFliptoPos = false;
+              }
+            }
+
+            // Check whether or not yaw has rolled under -180 to pos
+            if (mtbbbData[i - 1].yaw < -90 && mtbbbData[i].yaw > 0)
+            {
+              if (whipYawFliptoNeg == false)
+              {
+                whipYawFliptoPos = true;
+              }
+              else
+              {
+                whipYawFliptoNeg = false;
+              }
+            }
+
+            // Define tempYaw
+            if (whipYawFliptoNeg)
+            {
+              tempYaw = 180 + (180 + mtbbbData[i].yaw);
+            }
+            else if (whipYawFliptoPos)
+            {
+              tempYaw = -180 - (180 - mtbbbData[i].yaw);
             }
             else
             {
-              whipYawFliptoPos = false;
+              tempYaw = mtbbbData[i].yaw;
             }
-          }
 
-          // Check whether or not yaw has rolled under -180 to pos
-          if (mtbbbData[i - 1].yaw < -90 && mtbbbData[i].yaw > 0)
-          {
-            if (whipYawFliptoNeg == false)
+            // Calculate whip
+            if (abs(tempYaw - initialYaw) > whipDeflection)
             {
-              whipYawFliptoPos = true;
+              whipDeflection = abs(tempYaw - initialYaw);
             }
-            else
+
+            // Calculate table
+            if (abs(mtbbbData[i].roll - initialRoll) > tableDeflection)
             {
-              whipYawFliptoNeg = false;
+              tableDeflection = abs(mtbbbData[i].roll - initialRoll);
             }
           }
 
-          // Define tempYaw
-          if (whipYawFliptoNeg)
+          // Reset whip flip variables
+          whipYawFliptoNeg = false;
+          whipYawFliptoPos = false;
+
+          // Record whip
+          mtbbbData[jumpEventMinLoc].whip = whipDeflection;
+          if (mtbbbData[jumpEventMinLoc].whip > maxWhip)
           {
-            tempYaw = 180 + (180 + mtbbbData[i].yaw);
-          }
-          else if (whipYawFliptoPos)
-          {
-            tempYaw = -180 - (180 - mtbbbData[i].yaw);
-          }
-          else
-          {
-            tempYaw = mtbbbData[i].yaw;
+            maxWhip = mtbbbData[jumpEventMinLoc].whip;
           }
 
-          // Calculate whip
-          if (abs(tempYaw - initialYaw) > whipDeflection)
+          // Write Max Whip String
+          std::ostringstream stream;
+          stream << std::fixed << std::setprecision(1) << maxWhip;
+          maxWhipStr = stream.str();
+
+          // Record table
+          mtbbbData[jumpEventMinLoc].table = tableDeflection;
+          if (mtbbbData[jumpEventMinLoc].table > maxTable)
           {
-            whipDeflection = abs(tempYaw - initialYaw);
+            maxTable = mtbbbData[jumpEventMinLoc].table;
           }
 
-          // Calculate table
-          if (abs(mtbbbData[i].roll - initialRoll) > tableDeflection)
+          // Write Max Table String
+          std::ostringstream stream2;
+          stream2 << std::fixed << std::setprecision(1) << maxTable;
+          maxTableStr = stream2.str();
+
+          // Calculate hangtime and maxHangtime
+          mtbbbData[jumpEventMinLoc].hangtime = mtbbbData[jumpEventMinLoc].t - mtbbbData[jumpEventMaxLoc].t;
+          if (mtbbbData[jumpEventMinLoc].hangtime > maxHangtime)
           {
-            tableDeflection = abs(mtbbbData[i].roll - initialRoll);
+            maxHangtime = mtbbbData[jumpEventMinLoc].hangtime;
           }
+
+          // Write Max Hangtime String
+          std::ostringstream stream3;
+          stream3 << std::fixed << std::setprecision(2) << maxHangtime;
+          maxHangtimeStr = stream3.str();
+
+          // Reset values
+          possibleJumpEvent = false;
+          jumpEventMaxLoc = 0;
+          jumpEventMinLoc = 0;
         }
-
-        // Reset whip flip variables
-        whipYawFliptoNeg = false;
-        whipYawFliptoPos = false;
-
-        // Record whip
-        mtbbbData[jumpEventMinLoc].whip = whipDeflection;
-        if (mtbbbData[jumpEventMinLoc].whip > maxWhip)
+        else
         {
-          maxWhip = mtbbbData[jumpEventMinLoc].whip;
+          // Possible drop event
+
+          // Reset values
+          possibleJumpEvent = false;
+          jumpEventMaxLoc = 0;
+          jumpEventMinLoc = 0;
         }
-
-        // Write Max Whip String
-        std::ostringstream stream;
-        stream << std::fixed << std::setprecision(1) << maxWhip;
-        maxWhipStr = stream.str();
-
-        // Record table
-        mtbbbData[jumpEventMinLoc].table = tableDeflection;
-        if (mtbbbData[jumpEventMinLoc].table > maxTable)
-        {
-          maxTable = mtbbbData[jumpEventMinLoc].table;
-        }
-
-        // Write Max Table String
-        std::ostringstream stream2;
-        stream2 << std::fixed << std::setprecision(1) << maxTable;
-        maxTableStr = stream2.str();
-
-        // Calculate hangtime and maxHangtime
-        mtbbbData[jumpEventMinLoc].hangtime = mtbbbData[jumpEventMinLoc].t - mtbbbData[jumpEventMaxLoc].t;
-        if (mtbbbData[jumpEventMinLoc].hangtime > maxHangtime)
-        {
-          maxHangtime = mtbbbData[jumpEventMinLoc].hangtime;
-        }
-
-        // Write Max Hangtime String
-        std::ostringstream stream3;
-        stream3 << std::fixed << std::setprecision(2) << maxHangtime;
-        maxHangtimeStr = stream3.str();
-
-        // Reset values
-        possibleJumpEvent = false;
-        jumpEventMaxLoc = 0;
-        jumpEventMinLoc = 0;
       }
-      else if (mtbbbData[n - (bufferCenterOffset + 1)].daccZ > 0 && mtbbbData[n - bufferCenterOffset].daccZ <= 0 && mtbbbData[n - bufferCenterOffset].accZ > jumpMaxThreshold)
+      else if (mtbbbData[n - (smoothbufferCenterOffset + 1)].daccZ > 0 && mtbbbData[n - smoothbufferCenterOffset].daccZ <= 0 && mtbbbData[n - smoothbufferCenterOffset].smoothaccZ > jumpMaxThreshold)
       {
-        mtbbbData[n - bufferCenterOffset].jumpMinMaxEvent = 1; // jump maximum (takeoff). Used for debugging
+        mtbbbData[n - smoothbufferCenterOffset].jumpMinMaxEvent = 1; // jump maximum (takeoff). Used for debugging
 
-        jumpEventMaxLoc = n - bufferCenterOffset;
+        jumpEventMaxLoc = n - smoothbufferCenterOffset;
       }
-      else if (mtbbbData[n - (bufferCenterOffset + 1)].daccZ < 0 && mtbbbData[n - bufferCenterOffset].daccZ >= 0 && mtbbbData[n - bufferCenterOffset].accZ < jumpMinThreshold)
+      else if (mtbbbData[n - (smoothbufferCenterOffset + 1)].daccZ < 0 && mtbbbData[n - smoothbufferCenterOffset].daccZ >= 0 && mtbbbData[n - smoothbufferCenterOffset].smoothaccZ < jumpMinThreshold)
       {
-        mtbbbData[n - bufferCenterOffset].jumpMinMaxEvent = -1; // jump minimum (landing). Used for debugging
+        mtbbbData[n - smoothbufferCenterOffset].jumpMinMaxEvent = -1; // jump minimum (landing). Used for debugging
 
         // Flag for a possible finish of a jump
         possibleJumpEvent = true;
-        jumpEventMinLoc = n - bufferCenterOffset;
+        jumpEventMinLoc = n - smoothbufferCenterOffset;
       }
       else
       {
-        mtbbbData[n - bufferCenterOffset].jumpMinMaxEvent = 0; // no jump event
-      }                                                        // end of jump if statement
-    }                                                          // end of waiting for full buffer
+        mtbbbData[n - smoothbufferCenterOffset].jumpMinMaxEvent = 0; // no jump event
+      } // end of jump if statement
+    } // end of waiting for full buffer
 
     // GPS data acquisition
     timestamp_t ts{gpsd_data->fix.time};
@@ -605,6 +655,13 @@ int main()
       {
         oledWriteString(2, 7, "Ending MTBBB....");
 
+        // Check to make sure data folder exists, if not make it
+        std::string dataPath = "/home/pi/mtbblackbox/data";
+        if (!fileExists(dataPath))
+        {
+          system("mkdir /home/pi/mtbblackbox/data");
+        }
+
         // Initialize file for recording
         std::ofstream myfile;
 
@@ -614,13 +671,13 @@ int main()
         os << "/home/pi/mtbblackbox/data/data-" << timestamp.count() << ".csv";
         std::string filename = os.str();
         myfile.open(filename);
-        myfile << "t,yaw,pitch,dpitch,roll,accX,accY,accZ,daccZ,gpstime,lat,lon,speed,alt,jump,hangtime,whip,table,flow\n";
+        myfile << "t,yaw,pitch,dpitch,roll,accX,accY,accZ,smoothaccZ,daccZ,gpstime,lat,lon,speed,alt,jump,hangtime,whip,table,flow\n";
 
         // Write the data to the file
         for (int i = 0; i < mtbbbData.size(); i++)
         {
           myfile << std::fixed << std::setprecision(6) << mtbbbData[i].t << ",";
-          myfile << std::fixed << std::setprecision(2) << mtbbbData[i].yaw << "," << mtbbbData[i].pitch << "," << mtbbbData[i].dpitch << "," << mtbbbData[i].roll << "," << mtbbbData[i].accX << "," << mtbbbData[i].accY << "," << mtbbbData[i].accZ << "," << mtbbbData[i].daccZ << ",";
+          myfile << std::fixed << std::setprecision(2) << mtbbbData[i].yaw << "," << mtbbbData[i].pitch << "," << mtbbbData[i].dpitch << "," << mtbbbData[i].roll << "," << mtbbbData[i].accX << "," << mtbbbData[i].accY << "," << mtbbbData[i].accZ << "," << mtbbbData[i].smoothaccZ << "," << mtbbbData[i].daccZ << ",";
 
           // don't print GPS blanks
           if (mtbbbData[i].lat != 0)
@@ -739,7 +796,7 @@ int main()
         maxWhip = 0;
         maxTable = 0;
         maxSpeed = 0;
-        flow = 0;
+        accYSum = 0;
         maxHangtimeStr = "";
         maxWhipStr = "";
         maxTableStr = "";
